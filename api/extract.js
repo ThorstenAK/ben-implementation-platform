@@ -7,31 +7,38 @@ export const config = {
   api: { bodyParser: { sizeLimit: '20mb' } }
 };
 
-const SYSTEM_PROMPT = `You are an expert at reading employee benefits documents and extracting configuration data.
+const SYSTEM_PROMPT = `You are an expert at reading employee benefits documents.
 
-Return ONLY valid JSON (no markdown, no code blocks, no trailing commas):
+You will receive one or more benefit documents. Group them by benefit type — if documents relate to different benefits (e.g. PMI and Pension), return one object per benefit. If all documents relate to the same benefit, return one object.
+
+Return ONLY valid JSON (no markdown, no trailing commas):
 {
-  "benefit_name": "e.g. Private Medical Insurance",
-  "benefit_type": "e.g. Pension",
-  "employer": "company name or null",
-  "currency": "GBP",
-  "questions": [
+  "benefits": [
     {
-      "id": "snake_case_id",
-      "question_text": "The field label, e.g. Insurer Name",
-      "section": "section name e.g. Provider Details",
-      "extracted_answer": "extracted value or null",
-      "extracted_confidence": "high|medium|low",
-      "source": "brief quote from document",
-      "conflict": false,
-      "conflict_options": []
+      "benefit_name": "e.g. Private Medical Insurance",
+      "benefit_type": "e.g. PMI",
+      "employer": "company name or null",
+      "currency": "GBP",
+      "source_files": ["filename.pdf"],
+      "questions": [
+        {
+          "id": "snake_case_id",
+          "question_text": "Field label",
+          "section": "Section name",
+          "extracted_answer": "value or null",
+          "extracted_confidence": "high|medium|low",
+          "source": "brief quote",
+          "conflict": false,
+          "conflict_options": []
+        }
+      ],
+      "conflicts": [],
+      "missing": []
     }
-  ],
-  "conflicts": [],
-  "missing": []
+  ]
 }
 
-Extract every configuration field: insurer, policy number, coverage levels, limits, premiums, contributions, eligibility, waiting periods, exclusions, renewal date, dependants.`;
+Extract every config field per benefit: insurer, policy number, coverage, limits, premiums, contributions, eligibility, waiting periods, exclusions, renewal date, dependants.`;
 
 function cleanJson(str) {
   return str.replace(/,\s*([\]}])/g, '$1');
@@ -53,18 +60,15 @@ export default async function handler(req, res) {
       } else if (type?.startsWith('image/')) {
         contentBlocks.push({ type: 'image', source: { type: 'base64', media_type: type, data: b64Data } });
       } else {
-        let text;
-        try { text = Buffer.from(b64Data, 'base64').toString('utf-8'); } catch { text = b64Data; }
-        contentBlocks.push({ type: 'text', text: `--- Document: ${name || 'file'} ---\n${text}` });
+        let text; try { text = Buffer.from(b64Data, 'base64').toString('utf-8'); } catch { text = b64Data; }
+        contentBlocks.push({ type: 'text', text: '--- Document: ' + (name || 'file') + '---\n' + text });
       }
     }
-    if (contentBlocks.length === 0) return res.status(400).json({ error: 'No readable content found in files' });
-    contentBlocks.push({ type: 'text', text: 'Extract the benefit configuration. Return ONLY the JSON object, no other text.' });
+    if (contentBlocks.length === 0) return res.status(400).json({ error: 'No readable content found' });
+    contentBlocks.push({ type: 'text', text: 'Group by benefit type and extract config. Return ONLY the JSON.' });
 
     const message = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 8192,
-      system: SYSTEM_PROMPT,
+      model: 'claude-opus-4-5', max_tokens: 8192, system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: contentBlocks }]
     });
 
@@ -74,36 +78,19 @@ export default async function handler(req, res) {
 
     let parsed;
     try { parsed = JSON.parse(jsonMatch[0]); }
-    catch { try { parsed = JSON.parse(cleanJson(jsonMatch[0])); } catch (e2) { return res.status(500).json({ error: 'JSON parse failed: ' + e2.message, raw: jsonMatch[0].slice(0, 500) }); } }
+    catch { try { parsed = JSON.parse(cleanJson(jsonMatch[0])); } catch (e2) { return res.status(500).json({ error: 'JSON parse failed: ' + e2.message }); } }
 
-    const benefitName = parsed.benefit_name || parsed.benefitType || 'Unknown Benefit';
-    const questions = (parsed.questions || []).map((q, i) => ({
-      id: q.id || `q_${i}`,
-      question_text: q.question_text || q.question || '',
-      section: q.section || 'Configuration',
-      extracted_answer: q.extracted_answer ?? q.extracted ?? q.answer ?? null,
-      extracted_confidence: q.extracted_confidence || q.confidence || 'medium',
-      source: q.source || null,
-      conflict: q.conflict || false,
-      conflict_options: q.conflict_options || []
-    }));
+    const mapBenefit = (b, idx) => {
+      const name = b.benefit_name || 'Unknown Benefit';
+      const questions = (b.questions || []).map((q, i) => ({ id: q.id || ('q_' + idx + '_' + i), question_text: q.question_text || q.question || '', section: q.section || 'Configuration', extracted_answer: q.extracted_answer ?? q.extracted ?? q.answer ?? null, extracted_confidence: q.extracted_confidence || q.confidence || 'medium', source: q.source || null, conflict: q.conflict || false, conflict_options: q.conflict_options || [] }));
+      return { shell: { benefit_name: name, benefit_type: b.benefit_type || name, benefit_id_external: null, employer: b.employer || null, currency: b.currency || 'GBP' }, questions, question_count: questions.length, conflicts: b.conflicts || [], missing: b.missing || [] };
+    };
 
-    return res.status(200).json({
-      shell: {
-        benefit_name: benefitName,
-        benefit_type: parsed.benefit_type || benefitName,
-        benefit_id_external: null,
-        employer: parsed.employer || null,
-        currency: parsed.currency || 'GBP'
-      },
-      questions,
-      question_count: questions.length,
-      conflicts: parsed.conflicts || [],
-      missing: parsed.missing || []
-    });
+    const benefits = (parsed.benefits || [parsed]).map(mapBenefit);
+    return res.status(200).json({ benefits });
 
   } catch (err) {
     console.error('Extract error:', err);
-    return res.status(500).json({ error: err.message || 'Unknown error', type: err.constructor?.name });
+    return res.status(500).json({ error: err.message || 'Unknown error' });
   }
 }
