@@ -132,6 +132,7 @@ export default async function handler(req, res) {
 
     // Pass 2: extract each benefit in parallel
     const results = await Promise.all(benefitNames.map(async (name) => {
+      let _msgText = '';
       try {
         const msg = await anthropic.messages.create({
           model: 'claude-sonnet-4-6',
@@ -142,14 +143,14 @@ export default async function handler(req, res) {
             content: [...contentBlocks, { type: 'text', text: `Extract the full configuration for "${name}" only.` }]
           }]
         });
-        const raw = msg.content[0]?.text || '';
-        const jsonMatch = raw.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) return null;
+        _msgText = msg.content[0]?.text || '';
+        const jsonMatch = _msgText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return { _failed: name, _reason: 'no JSON found in response', _raw: _msgText.slice(0, 400) };
         const parsed = JSON.parse(cleanJson(jsonMatch[0]));
         return mapBenefit(parsed);
       } catch (e) {
         console.error(`Error extracting "${name}":`, e.message);
-        return { _failed: name, _reason: e.message, _raw: (msg?.content?.[0]?.text || '').slice(0, 300) };
+        return { _failed: name, _reason: e.message, _raw: _msgText.slice(0, 400) };
       }
     }));
 
