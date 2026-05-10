@@ -491,8 +491,8 @@
       if (state.benefits[0].shell.benefit_id_external) log('  Benefit ID: ' + state.benefits[0].shell.benefit_id_external, 'log-hi');
       log('  ' + state.questions.length + ' questions generated from ' + state.files.length + ' document' + (state.files.length === 1 ? '' : 's'), 'log-hi');
 
-      var conflicts = data.questions.filter(q => q.conflict).length;
-      var missing = data.questions.filter(q => q.extracted_confidence === 'missing').length;
+      var conflicts = state.questions.filter(q => q.conflict).length;
+      var missing = state.questions.filter(q => q.extracted_confidence === 'missing').length;
       if (conflicts) log('  ' + conflicts + ' conflict' + (conflicts === 1 ? '' : 's') + ' detected across documents', 'log-warn');
       if (missing) log('  ' + missing + ' question' + (missing === 1 ? '' : 's') + ' not found — need manual answers', 'log-warn');
 
