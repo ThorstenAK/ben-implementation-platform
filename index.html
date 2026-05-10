@@ -479,11 +479,12 @@
       }
 
       var data = await r.json();
-      state.benefits = data.benefits;
+      state.benefits = data.benefits || [];
+      if (state.benefits.length === 0) throw new Error(data.error || 'No benefits could be extracted. Check the documents contain benefit configuration data.');
       state.activeBenefitIdx = 0;
-      state.shell = data.benefits[0].shell;
+      state.shell = state.benefits[0].shell;
       state.shellId = null;
-      state.questions = data.benefits[0].questions;
+      state.questions = state.benefits[0].questions;
 
       // Show detection result in log
       data.benefits.forEach(function(b) { log('▸ Detected: ' + b.shell.benefit_name + ' (' + b.shell.benefit_type + ')', 'log-detect'); });
