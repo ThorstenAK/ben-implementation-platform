@@ -68,7 +68,7 @@ export default async function handler(req, res) {
     contentBlocks.push({ type: 'text', text: 'Group by benefit type and extract config. Return ONLY the JSON.' });
 
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6', max_tokens: 8192, system: SYSTEM_PROMPT,
+      model: 'claude-sonnet-4-6', max_tokens: 16000, system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: contentBlocks }]
     });
 
