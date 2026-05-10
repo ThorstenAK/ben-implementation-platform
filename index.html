@@ -33,6 +33,840 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
 .app { max-width: 760px; margin: 0 auto; padding: 24px 20px 60px; }
+
+/* Nav */
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 0.5px solid var(--border); }
+.logo { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+.logo span { color: var(--teal); }
+.stage-nav { display: flex; align-items: center; gap: 0; }
+.sn { font-size: 11px; color: var(--text3); padding: 4px 10px; border-radius: 20px; white-space: nowrap; cursor: default; }
+.sn.done { color: var(--teal); }
+.sn.active { background: var(--bg2); color: var(--text); font-weight: 500; }
+.sn-sep { color: var(--border2); font-size: 12px; margin: 0 1px; }
+
+/* Screens */
+.screen { display: none; }
+.screen.active { display: block; }
+#screen-review.active { display: flex; flex-direction: column; }
+
+/* Typography */
+h1 { font-size: 20px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+h2 { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.sub { font-size: 13px; color: var(--text2); margin-bottom: 20px; }
+
+/* Buttons */
+.btn { font-size: 13px; padding: 7px 16px; border-radius: var(--radius); border: 0.5px solid var(--border2); cursor: pointer; background: transparent; color: var(--text); font-family: inherit; }
+.btn:hover { background: var(--bg2); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+.btn-primary:hover { opacity: .87; background: var(--text); }
+.btn-sm { font-size: 12px; padding: 5px 12px; }
+.btn-ghost { border-color: transparent; color: var(--text2); }
+.btn-ghost:hover { background: var(--bg2); color: var(--text); }
+
+/* Form */
+input[type=text], textarea, select {
+width: 100%; padding: 9px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius);
+background: var(--bg3); color: var(--text); font-size: 13px; font-family: inherit;
+}
+input[type=text]:focus, textarea:focus { outline: none; border-color: var(--teal); }
+label { font-size: 12px; color: var(--text2); margin-bottom: 4px; display: block; }
+.field { margin-bottom: 14px; }
+
+/* Cards */
+.card { background: var(--bg3); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+.card + .card { margin-top: 8px; }
+
+/* Chips / badges */
+.chip { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 7px; border-radius: 10px; border: 0.5px solid; }
+.chip-id { background: var(--bg2); color: var(--text2); border-color: var(--border); font-family: monospace; }
+.chip-live { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
+.chip-type { background: var(--blue-light); color: var(--blue); border-color: #85B7EB; }
+.chip-currency { background: var(--bg2); color: var(--text2); border-color: var(--border); }
+
+/* Confidence badges */
+.conf { font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 8px; border: 0.5px solid; white-space: nowrap; }
+.conf-high { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
+.conf-medium { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); }
+.conf-missing { background: var(--red-light); color: var(--red); border-color: var(--red-mid); }
+.conf-conflict { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); }
+
+/* Footer row */
+.foot { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 14px; border-top: 0.5px solid var(--border); }
+.foot-info { font-size: 12px; color: var(--text2); }
+
+/* Drop zone */
+.drop-zone { border: 1.5px dashed var(--border2); border-radius: var(--radius-lg); padding: 40px 24px; text-align: center; cursor: pointer; background: var(--bg2); transition: border-color .15s; }
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--teal); }
+.drop-zone input[type=file] { display: none; }
+
+/* File list */
+.file-list { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; }
+.file-row { display: flex; align-items: center; gap: 10px; background: var(--bg3); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 8px 12px; }
+.file-icon { font-size: 20px; flex-shrink: 0; }
+.file-meta { flex: 1; min-width: 0; }
+.file-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-size { font-size: 11px; color: var(--text2); }
+.file-remove { color: var(--text3); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px; }
+.file-remove:hover { color: var(--red); }
+
+/* Log box */
+.log-box { background: var(--bg2); border-radius: var(--radius); padding: 12px 14px; font-size: 11px; font-family: monospace; max-height: 200px; overflow-y: auto; color: var(--text2); }
+.log-line { margin-bottom: 3px; line-height: 1.5; }
+.log-hi { color: var(--teal); }
+.log-detect { color: var(--purple); font-weight: 600; }
+.log-warn { color: var(--amber); }
+.log-err { color: var(--red); }
+
+/* Extraction shell */
+.shell-card { background: var(--bg3); border: 0.5px solid var(--border); border-left: 2px solid var(--teal); border-radius: 0 var(--radius-lg) var(--radius-lg) 0; padding: 12px 16px; margin-bottom: 12px; }
+.shell-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.shell-name { font-size: 14px; font-weight: 500; flex: 1; }
+.progress-bar-wrap { height: 3px; background: var(--border); border-radius: 2px; }
+.progress-bar { height: 3px; border-radius: 2px; background: var(--teal); transition: width .4s; }
+
+/* Stats bar */
+.stats-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.stat-pill { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 0.5px solid; }
+.sp-hi { background: var(--teal-light); color: var(--teal); border-color: var(--teal-mid); }
+.sp-med { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); }
+.sp-miss { background: var(--red-light); color: var(--red); border-color: var(--red-mid); }
+.sp-conf { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); }
+
+/* Question sections */
+.q-section { margin-bottom: 16px; }
+.q-sec-header { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--text3); padding: 5px 0; border-bottom: 0.5px solid var(--border); margin-bottom: 6px; }
+.q-row { display: grid; grid-template-columns: 185px 1fr 80px; margin-bottom: 4px; min-height: 44px; }
+.q-label { font-size: 12px; color: var(--text2); padding: 8px 10px; background: var(--bg2); border: 0.5px solid var(--border); border-right: none; border-radius: var(--radius) 0 0 var(--radius); display: flex; align-items: flex-start; line-height: 1.4; }
+.q-answer { font-size: 12px; padding: 8px 10px; background: var(--bg3); border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); }
+.q-answer-val { font-weight: 500; color: var(--text); margin-bottom: 2px; line-height: 1.4; }
+.q-answer-src { font-size: 10px; color: var(--text3); }
+.q-conf-cell { display: flex; align-items: center; justify-content: center; padding: 8px 6px; border: 0.5px solid var(--border); border-left: none; border-radius: 0 var(--radius) var(--radius) 0; }
+.conf-cell-high { background: var(--teal-light); }
+.conf-cell-medium { background: var(--amber-light); }
+.conf-cell-missing { background: var(--red-light); }
+.conf-cell-conflict { background: var(--amber-light); }
+
+/* Conflict box */
+.conflict-box { background: var(--amber-light); border-radius: var(--radius); padding: 8px 10px; font-size: 11px; color: var(--amber); margin-top: 2px; }
+.conflict-box strong { display: block; margin-bottom: 4px; }
+.conflict-opt { display: flex; align-items: flex-start; gap: 6px; margin-top: 4px; cursor: pointer; font-size: 11px; }
+.conflict-opt input { margin-top: 1px; flex-shrink: 0; }
+
+/* Missing input */
+.missing-input { width: 100%; font-size: 12px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg3); color: var(--text); font-family: inherit; margin-top: 4px; }
+.missing-input:focus { outline: none; border-color: var(--teal); }
+
+/* Confirm button per row */
+.confirm-btn { font-size: 11px; padding: 3px 8px; border-radius: 6px; border: 0.5px solid var(--teal-mid); background: var(--teal-light); color: var(--teal); cursor: pointer; white-space: nowrap; }
+.confirm-btn:hover { background: var(--teal-mid); color: #fff; }
+.confirmed-tick { font-size: 12px; color: var(--teal); }
+
+/* Impl list */
+.impl-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg3); border: 0.5px solid var(--border); border-radius: var(--radius-lg); cursor: pointer; margin-bottom: 6px; }
+.impl-row:hover { border-color: var(--border2); }
+.impl-name { font-size: 14px; font-weight: 500; flex: 1; }
+.impl-meta { font-size: 12px; color: var(--text2); }
+
+/* Spinner */
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--text); color: #fff; padding: 10px 16px; border-radius: var(--radius-lg); font-size: 13px; z-index: 100; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+/* Responsive */
+@media (max-width: 560px) {
+.q-row { grid-template-columns: 130px 1fr 70px; }
+.stage-nav { display: none; }
+}
+.q-answer-edit { width: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; color: #111; outline: none; transition: border-color 0.15s; }
+.q-answer-edit:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
+.q-needs-review { background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
+.q-confirmed-val { font-size: 14px; color: #111827; padding: 6px 0; }
+.q-done-badge { background: #d1fae5; color: #065f46; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
+.btn-mark-done { font-size: 12px; padding: 4px 10px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 4px; }
+.btn-mark-done:hover { background: #059669; }
+.btn-reopen { font-size: 12px; padding: 4px 10px; background: none; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; color: #6b7280; margin-left: 6px; }
+.btn-reopen:hover { border-color: #9ca3af; color: #374151; }
+.signoff-banner { background: #d1fae5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+.signoff-banner-text { flex: 1; font-weight: 600; color: #065f46; }
+.btn-signoff { background: #10b981; color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 8px; }
+.btn-signoff:hover { background: #059669; }
+.sidebar-signed { color: #10b981; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+.review-layout { display: flex; min-height: 0; flex: 1; }
+.benefit-sidebar { width: 200px; min-width: 200px; background: #f5f4f2; border-right: 1px solid rgba(0,0,0,0.07); overflow-y: auto; padding: 8px 0 32px; display: none; flex-shrink: 0; margin-right: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.04); }
+.benefit-sidebar.visible { display: block; }
+.sidebar-group-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; padding: 14px 14px 4px; }
+.sidebar-item { display: flex; align-items: center; gap: 7px; padding: 8px 14px; cursor: pointer; font-size: 13px; color: #374151; position: relative; border-left: 3px solid transparent; transition: background 0.1s; line-height: 1.3; }
+.sidebar-item:hover { background: rgba(0,0,0,0.04); }
+.sidebar-item.active { background: rgba(16,185,129,0.07); border-left-color: #10b981; color: #065f46; font-weight: 600; }
+.sidebar-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.sidebar-dot.done { background: #10b981; }
+.sidebar-dot.partial { background: #f59e0b; }
+.sidebar-dot.empty { background: #d1d5db; }
+.sidebar-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-remove { opacity: 0.35; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 5px; border-radius: 4px; transition: opacity 0.1s; }
+.sidebar-item:hover .sidebar-remove { opacity: 1; color: #6b7280; }
+.sidebar-remove:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+.review-main { flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; padding-left: 24px; }
+.review-topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+#screen-review { display: none; flex-direction: column; }
+#screen-review.active { display: flex; }
+
+/* Review flags */
+.flag-area { margin-top: 6px; }
+.flag-trigger { font-size: 11px; color: var(--text3); cursor: pointer; display: inline-flex; align-items: center; gap: 3px; padding: 2px 0; }
+.flag-trigger:hover { color: var(--text2); }
+.flag-panel { margin-top: 6px; padding: 8px 10px; background: var(--bg2); border-radius: var(--radius); border: 0.5px solid var(--border); }
+.flag-btns { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+.flag-btn { font-size: 11px; padding: 3px 10px; border-radius: 6px; border: 0.5px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; font-family: inherit; }
+.flag-btn:hover { background: var(--bg3); color: var(--text); }
+.flag-btn.ignore-active { background: var(--bg2); color: var(--text); border-color: var(--border2); font-weight: 600; }
+.flag-btn.accept-active { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); font-weight: 600; }
+.flag-comment-input { width: 100%; font-size: 11px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: 6px; background: var(--bg3); font-family: inherit; resize: none; color: var(--text); }
+.flag-comment-input:focus { outline: none; border-color: var(--teal); }
+.flag-clear { font-size: 10px; color: var(--text3); cursor: pointer; background: none; border: none; padding: 2px; font-family: inherit; }
+.flag-clear:hover { color: var(--red); }
+/* Flags to-do panel */
+.flags-todo { background: var(--amber-light); border: 0.5px solid var(--amber-mid); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 14px; }
+.flags-todo-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+.flags-todo-title { font-size: 13px; font-weight: 600; color: var(--amber); }
+.flags-todo-badge { font-size: 10px; background: var(--amber-mid); color: #fff; padding: 1px 7px; border-radius: 10px; margin-left: 6px; }
+.flags-todo-body { margin-top: 10px; }
+.flag-todo-item { padding: 7px 0; border-top: 0.5px solid rgba(0,0,0,0.07); }
+.flag-todo-q { font-size: 12px; font-weight: 500; color: var(--text); }
+.flag-todo-note { font-size: 11px; color: var(--text2); margin-top: 2px; font-style: italic; }
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top-bar">
+<div class="logo">Ben <span>Implementation</span></div>
+<div class="stage-nav" id="stage-nav">
+<div class="sn active" id="sn-home">Home</div>
+<div class="sn-sep">›</div>
+<div class="sn" id="sn-upload">Upload</div>
+<div class="sn-sep">›</div>
+<div class="sn" id="sn-extract">Extraction</div>
+<div class="sn-sep">›</div>
+<div class="sn" id="sn-review">Review</div>
+</div>
+</div>
+
+<!-- Screen: Home / Implementation list -->
+<div id="screen-home" class="screen active">
+<h1>Implementations</h1>
+<p class="sub">Select an existing implementation or start a new one.</p>
+<div id="impl-list" style="margin-bottom:16px">
+<div style="font-size:13px;color:var(--text2)"><span class="spinner"></span>Loading…</div>
+</div>
+<div style="border-top:0.5px solid var(--border);padding-top:16px;margin-top:8px">
+<h2 style="margin-bottom:12px">New implementation</h2>
+<div class="field">
+<label>Customer name</label>
+<input type="text" id="new-customer-name" placeholder="e.g. Opella Belgium" />
+</div>
+<button class="btn btn-primary" onclick="createImpl()">Create implementation →</button>
+</div>
+</div>
+
+<!-- Screen: Upload -->
+<div id="screen-upload" class="screen">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+<button class="btn btn-ghost btn-sm" onclick="goHome()">← Back</button>
+<h1 id="upload-title">Upload documents</h1>
+</div>
+<p class="sub">Drop all documents for this benefit — build guide, requirements, policy docs, payroll templates. Ben will read them, detect the benefit type, and pre-fill the questionnaire.</p>
+
+<div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+<input type="file" id="file-input" multiple accept=".pdf,.docx,.xlsx,.csv,.txt" onchange="handleFileSelect(event)" />
+<div style="font-size:28px;color:var(--text3);margin-bottom:10px">📄</div>
+<div style="font-size:14px;font-weight:500;margin-bottom:4px">Drop documents here or click to browse</div>
+<div style="font-size:12px;color:var(--text2)">PDF · DOCX · XLSX · CSV — mix and match</div>
+</div>
+
+<div class="file-list" id="file-list"></div>
+
+<div class="foot" id="upload-foot" style="display:none">
+<span class="foot-info" id="upload-foot-info"></span>
+<button class="btn btn-primary" id="extract-btn" onclick="runExtraction()">Analyse &amp; extract answers →</button>
+</div>
+</div>
+
+<!-- Screen: Extraction in progress -->
+<div id="screen-extract" class="screen">
+<h1 id="extract-title">Reading documents…</h1>
+<p class="sub" id="extract-sub">Sending to Opus for benefit detection and answer extraction</p>
+<div class="shell-card" id="shell-preview" style="display:none">
+<div class="shell-top">
+<div class="shell-name" id="shell-preview-name">Detecting benefit type…</div>
+</div>
+<div class="progress-bar-wrap"><div class="progress-bar" id="shell-progress-bar" style="width:0%"></div></div>
+<div style="font-size:11px;color:var(--text2);margin-top:5px" id="shell-progress-status">Extracting…</div>
+</div>
+<div class="log-box" id="extract-log"></div>
+</div>
+
+<!-- Screen: Questionnaire review -->
+<div id="screen-review" class="screen">
+<div class="review-layout">
+<div id="benefit-sidebar" class="benefit-sidebar"></div>
+<div class="review-main">
+<div class="review-topbar">
+<button class="btn btn-ghost btn-sm" onclick="goUpload()">← Upload more</button>
+<h1 id="review-title">Questionnaire</h1>
+<div id="review-chips"></div>
+</div>
+<p class="sub">Ben pre-filled every answer it could find. Review each section — resolve conflicts, fill in gaps. Your confirmed answers generate the requirements.</p>
+
+<div class="stats-bar" id="review-stats"></div>
+<div id="review-flags-panel"></div>
+<div id="review-body"></div>
+
+<div class="foot">
+<span class="foot-info" id="review-foot-info"></span>
+<button class="btn btn-primary" id="confirm-all-btn" onclick="confirmAllAndProceed()">Confirm all &amp; generate requirements →</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var state = {
+implId: null,
+implName: '',
+shellId: null,
+files: [],
+questions: [],
+shell: null,
+benefits: [],
+activeBenefitIdx: 0
+};
+
+function showScreen(id) {
+document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+document.getElementById('screen-' + id).classList.add('active');
+['home','upload','extract','review'].forEach((name, i) => {
+var el = document.getElementById('sn-' + name);
+if (!el) return;
+el.className = 'sn';
+if (name === id) el.classList.add('active');
+else if (['home','upload','extract','review'].indexOf(name) < ['home','upload','extract','review'].indexOf(id)) el.classList.add('done');
+});
+}
+
+function toast(msg, duration) {
+var el = document.getElementById('toast');
+el.textContent = msg;
+el.classList.add('show');
+setTimeout(() => el.classList.remove('show'), duration || 2500);
+}
+
+function log(msg, cls) {
+var box = document.getElementById('extract-log');
+var d = document.createElement('div');
+d.className = 'log-line' + (cls ? ' ' + cls : '');
+d.textContent = msg;
+box.appendChild(d);
+box.scrollTop = box.scrollHeight;
+}
+
+function formatSize(bytes) {
+if (bytes < 1024) return bytes + ' B';
+if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+}
+
+function fileToBase64(file) {
+return new Promise((resolve, reject) => {
+var reader = new FileReader();
+reader.onload = () => resolve(reader.result.split(',')[1]);
+reader.onerror = reject;
+reader.readAsDataURL(file);
+});
+}
+
+async function loadImpls() {
+try {
+var r = await fetch('/api/implementations');
+var data = await r.json();
+var list = document.getElementById('impl-list');
+if (!data.data?.length) {
+list.innerHTML = '<div style="font-size:13px;color:var(--text2)">No implementations yet.</div>';
+return;
+}
+list.innerHTML = data.data.map(i => `
+<div class="impl-row" onclick="selectImpl('${i.id}','${i.customer_name.replace(/'/g,"\\'")}')"> 
+<div class="impl-name">${i.customer_name}</div>
+<div class="impl-meta">${i.benefit_count} benefit${i.benefit_count == 1 ? '' : 's'} · ${i.document_count} doc${i.document_count == 1 ? '' : 's'}</div>
+<div style="color:var(--text3);font-size:13px">→</div>
+</div>
+`).join('');
+} catch(e) {
+document.getElementById('impl-list').innerHTML = '<div style="color:var(--red);font-size:13px">Failed to load: ' + e.message + '</div>';
+}
+}
+
+function goHome() { showScreen('home'); loadImpls(); }
+
+function selectImpl(id, name) {
+state.implId = id; state.implName = name; state.files = [];
+document.getElementById('upload-title').textContent = name;
+document.getElementById('file-list').innerHTML = '';
+document.getElementById('upload-foot').style.display = 'none';
+showScreen('upload');
+}
+
+async function createImpl() {
+var name = document.getElementById('new-customer-name').value.trim();
+if (!name) { toast('Enter a customer name'); return; }
+try {
+var r = await fetch('/api/implementations', {
+method: 'POST',
+headers: {'Content-Type':'application/json'},
+body: JSON.stringify({ customer_name: name })
+});
+var data = await r.json();
+if (!r.ok) throw new Error(data.error);
+selectImpl(data.data.id, data.data.customer_name);
+} catch(e) { toast('Error: ' + e.message); }
+}
+
+function handleDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
+function handleDragLeave(e) { document.getElementById('drop-zone').classList.remove('drag-over'); }
+function handleDrop(e) {
+e.preventDefault();
+document.getElementById('drop-zone').classList.remove('drag-over');
+addFiles(Array.from(e.dataTransfer.files));
+}
+function handleFileSelect(e) { addFiles(Array.from(e.target.files)); }
+
+async function addFiles(newFiles) {
+for (var f of newFiles) {
+if (state.files.find(x => x.name === f.name)) continue;
+var b64 = await fileToBase64(f);
+state.files.push({ name: f.name, size: f.size, type: f.type, base64: b64 });
+}
+renderFileList();
+}
+
+function removeFile(name) {
+state.files = state.files.filter(f => f.name !== name);
+renderFileList();
+}
+
+function renderFileList() {
+var list = document.getElementById('file-list');
+if (!state.files.length) { list.innerHTML = ''; document.getElementById('upload-foot').style.display = 'none'; return; }
+list.innerHTML = state.files.map(f => `
+<div class="file-row">
+<div class="file-icon">${f.type === 'application/pdf' || f.name.endsWith('.pdf') ? '📄' : f.name.endsWith('.xlsx') || f.name.endsWith('.csv') ? '📊' : '📝'}</div>
+<div class="file-meta">
+<div class="file-name">${f.name}</div>
+<div class="file-size">${formatSize(f.size)}</div>
+</div>
+<div class="file-remove" onclick="removeFile('${f.name.replace(/'/g,"\\'")}')">×</div>
+</div>
+`).join('');
+document.getElementById('upload-foot').style.display = 'flex';
+document.getElementById('upload-foot-info').textContent = state.files.length + ' document' + (state.files.length === 1 ? '' : 's') + ' ready';
+}
+
+function goUpload() { showScreen('upload'); }
+
+async function runExtraction() {
+if (!state.files.length) { toast('Add at least one document'); return; }
+document.getElementById('extract-log').innerHTML = '';
+document.getElementById('extract-title').textContent = 'Reading documents…';
+document.getElementById('extract-sub').textContent = 'Opus is detecting the benefit type and extracting answers';
+document.getElementById('shell-preview').style.display = 'none';
+showScreen('extract');
+
+log('Loading ' + state.files.length + ' document' + (state.files.length === 1 ? '' : 's') + '…');
+var benefitNames = [];
+try {
+log('Identifying benefits in your documents…');
+var _idRes = await fetch('/api/identify', {
+method: 'POST',
+headers: {'Content-Type':'application/json'},
+body: JSON.stringify({ files: state.files.map(f => ({ name: f.name, type: f.type, base64: f.base64 })) })
+});
+if (_idRes.ok) {
+var _idData = await _idRes.json();
+if (Array.isArray(_idData.benefits) && _idData.benefits.length > 0) {
+benefitNames = _idData.benefits.map(b => typeof b === 'string' ? b : b.name).filter(Boolean);
+var preview = benefitNames.slice(0, 4).join(', ') + (benefitNames.length > 4 ? ' …and ' + (benefitNames.length - 4) + ' more' : '');
+log('Found ' + benefitNames.length + ' benefit' + (benefitNames.length === 1 ? '' : 's') + ': ' + preview);
+}
+}
+} catch (_e) {}
+
+window._extractStart = Date.now();
+var _extIdx = 0; var _almostDoneShown = false;
+var logTimer = setInterval(() => {
+if (benefitNames.length > 0 && _extIdx < benefitNames.length) {
+log('Extracting ' + benefitNames[_extIdx++] + '…');
+} else if (!_almostDoneShown) {
+var secsRemaining = Math.max(5, 25 - Math.round((Date.now() - window._extractStart) / 1000));
+log('Almost done… (~' + secsRemaining + ' seconds remaining)');
+_almostDoneShown = true;
+}
+}, 2500);
+
+try {
+var r = await fetch('/api/extract', {
+method: 'POST',
+headers: {'Content-Type':'application/json'},
+body: JSON.stringify({
+implementation_id: state.implId,
+files: state.files.map(f => ({ name: f.name, type: f.type, base64: f.base64 })),
+benefitNames: benefitNames.length > 0 ? benefitNames : undefined
+})
+});
+clearInterval(logTimer);
+if (!r.ok) {
+var err = await r.json();
+log('Error: ' + (err.error || 'Unknown error'), 'log-err');
+document.getElementById('extract-title').textContent = 'Extraction failed';
+return;
+}
+var data = await r.json();
+state.benefits = data.benefits || [];
+if (state.benefits.length === 0) throw new Error(data.error || 'No benefits could be extracted.');
+state.activeBenefitIdx = 0;
+state.shell = state.benefits[0].shell;
+state.shellId = null;
+state.questions = state.benefits[0].questions;
+data.benefits.forEach(function(b) { log('▸ Detected: ' + b.shell.benefit_name + ' (' + b.shell.benefit_type + ')', 'log-detect'); });
+log(' ' + state.questions.length + ' questions generated from ' + state.files.length + ' document' + (state.files.length === 1 ? '' : 's'), 'log-hi');
+var conflicts = state.questions.filter(q => q.conflict).length;
+var missing = state.questions.filter(q => q.extracted_confidence === 'missing').length;
+if (conflicts) log(' ' + conflicts + ' conflict' + (conflicts === 1 ? '' : 's') + ' detected', 'log-warn');
+if (missing) log(' ' + missing + ' question' + (missing === 1 ? '' : 's') + ' not found', 'log-warn');
+document.getElementById('shell-preview').style.display = 'block';
+document.getElementById('shell-preview-name').textContent = data.benefits.length > 1 ? data.benefits.length + ' benefits detected' : data.benefits[0].shell.benefit_name;
+document.getElementById('shell-progress-bar').style.width = '100%';
+document.getElementById('shell-progress-status').textContent = state.questions.length + ' questions ready for review';
+document.getElementById('extract-title').textContent = 'Extraction complete';
+document.getElementById('extract-sub').textContent = 'Questionnaire built — review and confirm answers below';
+setTimeout(() => renderReview(), 800);
+} catch(e) {
+clearInterval(logTimer);
+log('Error: ' + e.message, 'log-err');
+document.getElementById('extract-title').textContent = 'Extraction failed';
+}
+}
+
+function switchBenefit(idx) {
+state.activeBenefitIdx = idx;
+state.shell = state.benefits[idx].shell;
+state.questions = state.benefits[idx].questions;
+renderReview();
+}
+
+function renderSidebar() {
+var sb = document.getElementById('benefit-sidebar');
+if (!sb) return;
+if (!state.benefits || state.benefits.length <= 1) { sb.classList.remove('visible'); sb.innerHTML = ''; return; }
+sb.classList.add('visible');
+var groups = {}, groupOrder = [];
+state.benefits.forEach(function(b, i) {
+var type = (b.shell && b.shell.benefit_type) || 'Other';
+if (!groups[type]) { groups[type] = []; groupOrder.push(type); }
+groups[type].push({ b: b, i: i });
+});
+var out = '';
+groupOrder.forEach(function(type) {
+out += '<div class="sidebar-group">';
+out += '<div class="sidebar-group-title">' + type + '</div>';
+groups[type].forEach(function(item) {
+var qs = item.b.questions || [];
+var answered = qs.filter(function(q) { return q.extracted_answer != null && q.extracted_answer !== ''; }).length;
+var dot = qs.length === 0 ? 'empty' : (answered === qs.length ? 'done' : answered > 0 ? 'partial' : 'empty');
+var active = item.i === state.activeBenefitIdx ? ' active' : '';
+var name = (item.b.shell && item.b.shell.benefit_name) || ('Benefit ' + (item.i + 1));
+var signedOff = item.b.signedOff === true;
+out += '<div class="sidebar-item' + active + '" onclick="switchBenefit(' + item.i + ')">';
+if (signedOff) { out += '<span class="sidebar-signed">✓</span>'; }
+else { out += '<span class="sidebar-dot ' + dot + '"></span>'; }
+out += '<span class="sidebar-name">' + name + '</span>';
+out += '<button class="sidebar-remove" onclick="removeBenefit(event,' + item.i + ')" title="Remove">×</button>';
+out += '</div>';
+});
+out += '</div>';
+});
+sb.innerHTML = out;
+}
+
+function removeBenefit(e, idx) {
+e.stopPropagation();
+if (state.benefits.length <= 1) { goUpload(); return; }
+state.benefits.splice(idx, 1);
+if (state.activeBenefitIdx >= state.benefits.length) state.activeBenefitIdx = state.benefits.length - 1;
+switchBenefit(state.activeBenefitIdx);
+}
+
+function renderReview() {
+var shell = state.shell;
+var questions = state.questions;
+if (!shell) return;
+renderSidebar();
+var high = questions.filter(q => q.extracted_confidence === 'high').length;
+var medium = questions.filter(q => q.extracted_confidence === 'medium').length;
+var missing = questions.filter(q => q.extracted_confidence === 'missing').length;
+var conflicts = questions.filter(q => q.conflict).length;
+var statsHtml = '';
+if (high) statsHtml += '<span class="stat-pill sp-hi">' + high + ' high confidence</span>';
+if (medium) statsHtml += '<span class="stat-pill sp-med">' + medium + ' review</span>';
+if (conflicts) statsHtml += '<span class="stat-pill sp-conf">' + conflicts + ' conflict' + (conflicts===1?'':'s') + '</span>';
+if (missing) statsHtml += '<span class="stat-pill sp-miss">' + missing + ' missing</span>';
+document.getElementById('review-stats').innerHTML = statsHtml;
+var sections = {};
+questions.forEach(q => { var sec = q.section || 'configuration'; if (!sections[sec]) sections[sec] = []; sections[sec].push(q); });
+var order = ['configuration','pricing','eligibility','enrolment','payroll','edge_cases'];
+var allSections = [...order.filter(s => sections[s]), ...Object.keys(sections).filter(s => !order.includes(s))];
+var html = '';
+allSections.forEach(sec => {
+if (!sections[sec]?.length) return;
+html += '<div class="q-section"><div class="q-sec-header">' + sec.replace(/_/g,' ') + '</div>';
+sections[sec].forEach(q => { html += renderQuestionRow(q); });
+html += '</div>';
+});
+var fpEl = document.getElementById('review-flags-panel');
+if (fpEl) fpEl.innerHTML = renderFlagsPanel();
+document.getElementById('review-body').innerHTML = html;
+updateReviewFooter();
+var activeBenefit = state.benefits[state.activeBenefitIdx];
+var allConfirmed = questions.length > 0 && questions.every(function(q) { return q.confirmed === true; });
+var signoffArea = document.getElementById('signoff-area');
+if (!signoffArea) {
+var footEl = document.querySelector('#screen-review .foot');
+if (footEl) { signoffArea = document.createElement('div'); signoffArea.id = 'signoff-area'; footEl.parentNode.insertBefore(signoffArea, footEl); }
+}
+if (signoffArea) {
+if (activeBenefit && activeBenefit.signedOff) {
+signoffArea.innerHTML = '<div class="signoff-banner"><span class="signoff-banner-text">✓ Signed off — ready for build &amp; test</span><button class="btn-reopen" onclick="reopenBenefit()">Reopen</button></div>';
+} else if (allConfirmed) {
+signoffArea.innerHTML = '<button class="btn-signoff" onclick="signOffBenefit()">Sign off as ready for build &amp; test</button>';
+} else { signoffArea.innerHTML = ''; }
+}
+showScreen('review');
+}
+
+function signOffBenefit() {
+if (state.benefits[state.activeBenefitIdx]) { state.benefits[state.activeBenefitIdx].signedOff = true; renderReview(); }
+}
+
+function needsReview(q) {
+var meaningless = [null, '', 'null', 'N/A', 'n/a', 'unknown', 'not specified', 'not found', 'none', 'n/a', 'na'];
+var ans = q.extracted_answer;
+if (ans === null || ans === undefined) return true;
+if (typeof ans === 'string' && meaningless.indexOf(ans.trim().toLowerCase()) !== -1) return true;
+if (q.extracted_confidence === 'low') return true;
+return false;
+}
+
+function renderQuestionRow(q) {
+var confClass = q.conflict ? 'conflict' : (q.extracted_confidence || 'missing');
+var confLabel = q.conflict ? 'Conflict' : (q.extracted_confidence === 'high' ? 'High' : q.extracted_confidence === 'medium' ? 'Review' : 'Missing');
+var cellBg = 'conf-cell-' + confClass;
+var reviewBadge = needsReview(q) ? '<span class="q-needs-review">⚠ Needs review</span>' : '';
+var answerHtml = '';
+var current = q.confirmed_answer ?? q.extracted_answer;
+if (q.confirmed === true) {
+answerHtml = '<div class="q-confirmed-val">' + escapeHtml(q.confirmed_answer || current || '') + '</div>';
+answerHtml += '<div style="margin-top:4px"><span class="q-done-badge">✓ Done</span><button class="btn-reopen" onclick="reopenQuestion(\'' + q.id + '\')">Edit</button></div>';
+} else if (q.conflict && q.conflict_options) {
+var opts = typeof q.conflict_options === 'string' ? JSON.parse(q.conflict_options) : q.conflict_options;
+answerHtml = '<div class="conflict-box"><strong>Conflict — two values found:</strong>';
+opts.forEach((opt, i) => {
+var checked = (i === 0 && !q.confirmed_answer) || (q.confirmed_answer === opt.value) ? 'checked' : '';
+answerHtml += '<label class="conflict-opt"><input type="radio" name="conf-' + q.id + '" value="' + escapeHtml(opt.value) + '" ' + checked + ' onchange="resolveConflict(\'' + q.id + '\',this.value)"> ' + escapeHtml(opt.value) + ' — ' + (opt.source_document || '') + (opt.source_page ? ' · p.' + opt.source_page : '') + '</label>';
+});
+answerHtml += '</div><div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>';
+} else if (!current && q.extracted_confidence === 'missing') {
+answerHtml = '<div style="color:var(--red);font-size:12px;font-weight:500;margin-bottom:3px">Not found in documents</div>';
+answerHtml += '<input class="missing-input" id="inp-' + q.id + '" placeholder="Enter answer…" value="' + escapeHtml(q.confirmed_answer || '') + '" oninput="stageMissing(\'' + q.id + '\',this.value)" />';
+answerHtml += '<div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>';
+} else {
+answerHtml = '<input type="text" class="q-answer-edit" id="edit-' + q.id + '" value="' + escapeHtml(current || '') + '" placeholder="Enter answer...">';
+if (q.source_document) answerHtml += '<div class="q-answer-src">📄 ' + escapeHtml(q.source_document) + (q.source_page ? ' · p.' + q.source_page : '') + '</div>';
+if (q.source_quote && q.source_quote !== current) answerHtml += '<div class="q-answer-src" style="font-style:italic">"' + escapeHtml(q.source_quote) + '"</div>';
+answerHtml += '<div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>';
+}
+var confirmCell = '';
+if (q.confirmed_at && !q.confirmed) { confirmCell = '<span class="confirmed-tick" title="Confirmed">✓</span>'; }
+else if (!q.conflict && q.extracted_confidence !== 'missing' && !q.confirmed) { confirmCell = '<button class="confirm-btn" onclick="confirmQuestion(\'' + q.id + '\')">Confirm</button>'; }
+var flagAreaHtml = renderFlagArea(q);
+return `
+<div class="q-row" id="qrow-${q.id}">
+<div class="q-label">${escapeHtml(q.question_text)}${reviewBadge}</div>
+<div class="q-answer">${answerHtml}${confirmCell ? '<div style="margin-top:5px">' + confirmCell + '</div>' : ''}${flagAreaHtml}</div>
+<div class="q-conf-cell ${cellBg}"><span class="conf conf-${confClass}">${confLabel}</span></div>
+</div>`;
+}
+
+function markQuestionDone(qId) {
+var q = state.questions.find(function(x) { return x.id === qId; });
+if (q) { var inp = document.getElementById('edit-' + qId) || document.getElementById('inp-' + qId); if (inp) q.confirmed_answer = inp.value; q.confirmed = true; renderReview(); }
+}
+
+function reopenQuestion(qId) {
+var q = state.questions.find(function(x) { return x.id === qId; });
+if (q) { q.confirmed = false; renderReview(); }
+}
+
+function reopenBenefit() {
+if (state.benefits[state.activeBenefitIdx]) { state.benefits[state.activeBenefitIdx].signedOff = false; renderReview(); }
+}
+
+function escapeHtml(str) {
+if (!str) return '';
+return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+var stagedMissing = {};
+function stageMissing(id, val) { stagedMissing[id] = val; }
+
+async function confirmQuestion(id) {
+var q = state.questions.find(q => q.id === id);
+if (!q) return;
+var editInput = document.getElementById('edit-' + id);
+var answer = editInput ? editInput.value : q.extracted_answer;
+try {
+var r = await fetch('/api/questions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ question_id: id, action: 'confirm', answer, confirmed_by: 'IM' }) });
+if (!r.ok) throw new Error((await r.json()).error);
+q.confirmed_at = new Date().toISOString(); q.confirmed_answer = answer;
+document.getElementById('qrow-' + id).outerHTML = renderQuestionRow(q);
+updateReviewFooter();
+} catch(e) { toast('Error: ' + e.message); }
+}
+
+async function resolveConflict(id, value) {
+var q = state.questions.find(q => q.id === id);
+if (!q) return;
+try {
+var r = await fetch('/api/questions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ question_id: id, action: 'resolve_conflict', resolved_value: value, confirmed_by: 'IM' }) });
+if (!r.ok) throw new Error((await r.json()).error);
+q.confirmed_answer = value; q.confirmed_at = new Date().toISOString();
+updateReviewFooter(); toast('Conflict resolved ✓');
+} catch(e) { toast('Error: ' + e.message); }
+}
+
+async function confirmAllAndProceed() {
+var btn = document.getElementById('confirm-all-btn');
+btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Saving…';
+var promises = [];
+for (var [id, val] of Object.entries(stagedMissing)) {
+if (!val.trim()) continue;
+promises.push(fetch('/api/questions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ question_id: id, action: 'confirm', answer: val.trim(), confirmed_by: 'IM' }) }));
+var q = state.questions.find(q => q.id === id);
+if (q) { q.confirmed_answer = val.trim(); q.confirmed_at = new Date().toISOString(); }
+}
+for (var q of state.questions) {
+if (!q.confirmed_at && !q.conflict && q.extracted_answer) {
+promises.push(fetch('/api/questions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ question_id: q.id, action: 'confirm', answer: q.extracted_answer, confirmed_by: 'IM' }) }));
+q.confirmed_at = new Date().toISOString(); q.confirmed_answer = q.extracted_answer;
+}
+}
+await Promise.all(promises);
+btn.disabled = false; btn.innerHTML = 'Confirm all &amp; generate requirements →';
+toast('All answers confirmed. Requirements generation coming in Phase 2.');
+updateReviewFooter();
+}
+
+function updateReviewFooter() {
+var confirmed = state.questions.filter(q => q.confirmed_at).length;
+var total = state.questions.length;
+var unresolved = state.questions.filter(q => q.conflict && !q.confirmed_at).length;
+var missing = state.questions.filter(q => q.extracted_confidence === 'missing' && !q.confirmed_at).length;
+var info = confirmed + '/' + total + ' confirmed';
+if (unresolved) info += ' · ' + unresolved + ' conflict' + (unresolved===1?'':'s') + ' to resolve';
+if (missing) info += ' · ' + missing + ' missing';
+document.getElementById('review-foot-info').textContent = info;
+}
+
+function openFlagPanel(qId) { var q = state.questions.find(function(x) { return x.id === qId; }); if (q) { q.flagEditing = true; renderReview(); } }
+function closeFlagPanel(qId) { var q = state.questions.find(function(x) { return x.id === qId; }); if (q) { q.flagEditing = false; renderReview(); } }
+function setFlag(qId, type) { var q = state.questions.find(function(x) { return x.id === qId; }); if (!q) return; q.flag = (q.flag === type) ? null : type; q.flagEditing = true; renderReview(); }
+function setFlagComment(qId, val) { var q = state.questions.find(function(x) { return x.id === qId; }); if (q) q.flag_comment = val; }
+function clearFlag(qId) { var q = state.questions.find(function(x) { return x.id === qId; }); if (q) { q.flag = null; q.flag_comment = ''; q.flagEditing = false; renderReview(); } }
+
+function renderFlagArea(q) {
+if (!q.flag && !q.flagEditing) return '<div class="flag-area"><span class="flag-trigger" onclick="openFlagPanel(\'' + q.id + '\')">🚩 Flag</span></div>';
+var ignoreClass = 'flag-btn' + (q.flag === 'ignore' ? ' ignore-active' : '');
+var acceptClass = 'flag-btn' + (q.flag === 'accept' ? ' accept-active' : '');
+var html = '<div class="flag-area"><div class="flag-panel"><div class="flag-btns">';
+html += '<button class="' + ignoreClass + '" onclick="setFlag(\'' + q.id + '\',\'ignore\')">🚫 Ignore</button>';
+html += '<button class="' + acceptClass + '" onclick="setFlag(\'' + q.id + '\',\'accept\')">📋 Accept for review</button>';
+if (q.flag) html += '<button class="flag-clear" onclick="clearFlag(\'' + q.id + '\')" title="Clear flag">× clear</button>';
+html += '</div>';
+html += '<textarea class="flag-comment-input" rows="2" placeholder="Add a note about this decision..." oninput="setFlagComment(\'' + q.id + '\',this.value)">' + escapeHtml(q.flag_comment || '') + '</textarea>';
+html += '<div style="margin-top:5px;display:flex;gap:8px;align-items:center">';
+html += '<button style="font-size:11px;padding:3px 10px;border-radius:6px;border:none;background:var(--teal);color:#fff;cursor:pointer;font-family:inherit;" onclick="closeFlagPanel(\'' + q.id + '\')">Save</button>';
+if (!q.flag) { html += '<span style="font-size:10px;color:var(--text3)">Select Ignore or Accept first</span>'; }
+else { html += '<span style="font-size:10px;color:var(--text2)">' + (q.flag === 'accept' ? '📋 Added to review to-do' : '🚫 Marked as ignored') + '</span>'; }
+html += '</div></div></div>';
+return html;
+}
+
+function renderFlagsPanel() {
+var accepted = state.questions.filter(function(q) { return q.flag === 'accept'; });
+if (!accepted.length) return '';
+var items = accepted.map(function(q) {
+return '<div class="flag-todo-item"><div class="flag-todo-q">' + escapeHtml(q.question_text) + '</div>' + (q.flag_comment ? '<div class="flag-todo-note">"' + escapeHtml(q.flag_comment) + '"</div>' : '') + '</div>';
+}).join('');
+return '<div class="flags-todo"><div class="flags-todo-header" onclick="toggleFlagsTodo()"><span class="flags-todo-title">📋 Review to-do <span class="flags-todo-badge">' + accepted.length + '</span></span><span style="font-size:11px;color:var(--amber)">' + accepted.length + ' item' + (accepted.length === 1 ? '' : 's') + ' to review ▾</span></div><div class="flags-todo-body" id="flags-todo-body">' + items + '</div></div>';
+}
+
+function toggleFlagsTodo() {
+var body = document.getElementById('flags-todo-body');
+if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+loadImpls();
+</script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ben — Implementation Platform</title>
+<style>
+:root {
+--bg: #f9f9f8;
+--bg2: #f1f0ea;
+--bg3: #ffffff;
+--border: rgba(0,0,0,0.1);
+--border2: rgba(0,0,0,0.18);
+--text: #1a1a19;
+--text2: #6b6b68;
+--text3: #9a9a96;
+--teal: #1D9E75;
+--teal-light: #E1F5EE;
+--teal-mid: #5DCAA5;
+--amber: #854F0B;
+--amber-light: #FAEEDA;
+--amber-mid: #EF9F27;
+--red: #A32D2D;
+--red-light: #FCEBEB;
+--red-mid: #F09595;
+--purple: #534AB7;
+--purple-light: #EEEDFE;
+--blue: #185FA5;
+--blue-light: #E6F1FB;
+--radius: 8px;
+--radius-lg: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+.app { max-width: 760px; margin: 0 auto; padding: 24px 20px 60px; }
 .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 0.5px solid var(--border); }
 .logo { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
 .logo span { color: var(--teal); }
