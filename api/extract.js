@@ -12,14 +12,19 @@ const SYSTEM_PROMPT = `You are an expert at reading employee benefits documents 
 Return ONLY valid JSON (no markdown, no code blocks, no trailing commas):
 {
   "benefit_name": "e.g. Private Medical Insurance",
+  "benefit_type": "e.g. Pension",
   "employer": "company name or null",
+  "currency": "GBP",
   "questions": [
     {
       "id": "snake_case_id",
-      "question": "Field label",
-      "extracted": "value or null",
-      "confidence": "high|medium|low",
-      "source": "brief quote"
+      "question_text": "The field label, e.g. Insurer Name",
+      "section": "section name e.g. Provider Details",
+      "extracted_answer": "extracted value or null",
+      "extracted_confidence": "high|medium|low",
+      "source": "brief quote from document",
+      "conflict": false,
+      "conflict_options": []
     }
   ],
   "conflicts": [],
@@ -72,20 +77,29 @@ export default async function handler(req, res) {
     catch { try { parsed = JSON.parse(cleanJson(jsonMatch[0])); } catch (e2) { return res.status(500).json({ error: 'JSON parse failed: ' + e2.message, raw: jsonMatch[0].slice(0, 500) }); } }
 
     const benefitName = parsed.benefit_name || parsed.benefitType || 'Unknown Benefit';
-    const questions = (parsed.questions || parsed.answers || []).map((q, i) => ({
+    const questions = (parsed.questions || []).map((q, i) => ({
       id: q.id || `q_${i}`,
-      question: q.question,
-      extracted: q.extracted ?? q.answer ?? null,
-      confidence: q.confidence || 'medium',
-      source: q.source || null
+      question_text: q.question_text || q.question || '',
+      section: q.section || 'Configuration',
+      extracted_answer: q.extracted_answer ?? q.extracted ?? q.answer ?? null,
+      extracted_confidence: q.extracted_confidence || q.confidence || 'medium',
+      source: q.source || null,
+      conflict: q.conflict || false,
+      conflict_options: q.conflict_options || []
     }));
 
     return res.status(200).json({
-      shell: { benefit_name: benefitName, benefit_type: benefitName, employer: parsed.employer || null },
+      shell: {
+        benefit_name: benefitName,
+        benefit_type: parsed.benefit_type || benefitName,
+        benefit_id_external: null,
+        employer: parsed.employer || null,
+        currency: parsed.currency || 'GBP'
+      },
       questions,
       question_count: questions.length,
       conflicts: parsed.conflicts || [],
-      missing: parsed.missing || parsed.missingInfo || []
+      missing: parsed.missing || []
     });
 
   } catch (err) {
