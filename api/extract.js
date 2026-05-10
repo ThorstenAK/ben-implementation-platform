@@ -149,13 +149,13 @@ export default async function handler(req, res) {
         return mapBenefit(parsed);
       } catch (e) {
         console.error(`Error extracting "${name}":`, e.message);
-        return null;
+        return { _failed: name, _reason: e.message, _raw: (msg?.content?.[0]?.text || '').slice(0, 300) };
       }
     }));
 
-    const benefits = results.filter(Boolean);
-    const debugErrors = results.map((r, i) => r ? null : benefitNames[i] + ': failed').filter(Boolean);
-    return res.status(200).json({ benefits, _debug: { identified: benefitNames, errors: debugErrors } });
+    const benefits = results.filter(r => r && !r._failed);
+    const failures = results.filter(r => r && r._failed);
+    return res.status(200).json({ benefits, _debug: { identified: benefitNames, failures } });
 
   } catch (err) {
     console.error('Extract error:', err);
