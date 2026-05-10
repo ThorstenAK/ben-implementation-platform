@@ -41,7 +41,7 @@ export default async function handler(req, res) {
     const { id } = req.query;
     if (!id) return res.status(400).json({ error: 'id is required' });
     try {
-      await sql`DELETE FROM questions WHERE benefit_id IN (SELECT id FROM benefit_shells WHERE implementation_id = ${id})`;
+      await sql`DELETE FROM questions WHERE benefit_shell_id IN (SELECT id FROM benefit_shells WHERE implementation_id = ${id})`;
       await sql`DELETE FROM benefit_shells WHERE implementation_id = ${id}`;
       await sql`DELETE FROM documents WHERE implementation_id = ${id}`;
       await sql`DELETE FROM implementations WHERE id = ${id}`;
