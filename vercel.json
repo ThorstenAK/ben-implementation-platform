@@ -4,6 +4,6 @@
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "functions": {
-    "api/extract.js": { "maxDuration": 60, "memory": 1024 }
+    "api/extract.js": { "maxDuration": 300, "memory": 1024 }
   }
 }
