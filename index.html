@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ben — Implementation Platform</title>
+<title>Ben â Implementation Platform</title>
 <style>
   :root {
     --bg: #f9f9f8;
@@ -180,6 +180,9 @@
     .q-row { grid-template-columns: 130px 1fr 70px; }
     .stage-nav { display: none; }
   }
+
+    .q-answer-edit { width: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; color: #111; outline: none; transition: border-color 0.15s; }
+    .q-answer-edit:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
 </style>
 </head>
 <body>
@@ -188,11 +191,11 @@
     <div class="logo">Ben <span>Implementation</span></div>
     <div class="stage-nav" id="stage-nav">
       <div class="sn active" id="sn-home">Home</div>
-      <div class="sn-sep">›</div>
+      <div class="sn-sep">âº</div>
       <div class="sn" id="sn-upload">Upload</div>
-      <div class="sn-sep">›</div>
+      <div class="sn-sep">âº</div>
       <div class="sn" id="sn-extract">Extraction</div>
-      <div class="sn-sep">›</div>
+      <div class="sn-sep">âº</div>
       <div class="sn" id="sn-review">Review</div>
     </div>
   </div>
@@ -202,7 +205,7 @@
     <h1>Implementations</h1>
     <p class="sub">Select an existing implementation or start a new one.</p>
     <div id="impl-list" style="margin-bottom:16px">
-      <div style="font-size:13px;color:var(--text2)"><span class="spinner"></span>Loading…</div>
+      <div style="font-size:13px;color:var(--text2)"><span class="spinner"></span>Loadingâ¦</div>
     </div>
     <div style="border-top:0.5px solid var(--border);padding-top:16px;margin-top:8px">
       <h2 style="margin-bottom:12px">New implementation</h2>
@@ -210,43 +213,43 @@
         <label>Customer name</label>
         <input type="text" id="new-customer-name" placeholder="e.g. Opella Belgium" />
       </div>
-      <button class="btn btn-primary" onclick="createImpl()">Create implementation →</button>
+      <button class="btn btn-primary" onclick="createImpl()">Create implementation â</button>
     </div>
   </div>
 
   <!-- Screen: Upload -->
   <div id="screen-upload" class="screen">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
-      <button class="btn btn-ghost btn-sm" onclick="goHome()">← Back</button>
+      <button class="btn btn-ghost btn-sm" onclick="goHome()">â Back</button>
       <h1 id="upload-title">Upload documents</h1>
     </div>
-    <p class="sub">Drop all documents for this benefit — build guide, requirements, policy docs, payroll templates. Ben will read them, detect the benefit type, and pre-fill the questionnaire.</p>
+    <p class="sub">Drop all documents for this benefit â build guide, requirements, policy docs, payroll templates. Ben will read them, detect the benefit type, and pre-fill the questionnaire.</p>
 
     <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
       <input type="file" id="file-input" multiple accept=".pdf,.docx,.xlsx,.csv,.txt" onchange="handleFileSelect(event)" />
-      <div style="font-size:28px;color:var(--text3);margin-bottom:10px">📄</div>
+      <div style="font-size:28px;color:var(--text3);margin-bottom:10px">ð</div>
       <div style="font-size:14px;font-weight:500;margin-bottom:4px">Drop documents here or click to browse</div>
-      <div style="font-size:12px;color:var(--text2)">PDF · DOCX · XLSX · CSV — mix and match</div>
+      <div style="font-size:12px;color:var(--text2)">PDF Â· DOCX Â· XLSX Â· CSV â mix and match</div>
     </div>
 
     <div class="file-list" id="file-list"></div>
 
     <div class="foot" id="upload-foot" style="display:none">
       <span class="foot-info" id="upload-foot-info"></span>
-      <button class="btn btn-primary" id="extract-btn" onclick="runExtraction()">Analyse & extract answers →</button>
+      <button class="btn btn-primary" id="extract-btn" onclick="runExtraction()">Analyse & extract answers â</button>
     </div>
   </div>
 
   <!-- Screen: Extraction in progress -->
   <div id="screen-extract" class="screen">
-    <h1 id="extract-title">Reading documents…</h1>
+    <h1 id="extract-title">Reading documentsâ¦</h1>
     <p class="sub" id="extract-sub">Sending to Opus for benefit detection and answer extraction</p>
     <div class="shell-card" id="shell-preview" style="display:none">
       <div class="shell-top">
-        <div class="shell-name" id="shell-preview-name">Detecting benefit type…</div>
+        <div class="shell-name" id="shell-preview-name">Detecting benefit typeâ¦</div>
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar" id="shell-progress-bar" style="width:0%"></div></div>
-      <div style="font-size:11px;color:var(--text2);margin-top:5px" id="shell-progress-status">Extracting…</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:5px" id="shell-progress-status">Extractingâ¦</div>
     </div>
     <div class="log-box" id="extract-log"></div>
   </div>
@@ -254,18 +257,18 @@
   <!-- Screen: Questionnaire review -->
   <div id="screen-review" class="screen">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="goUpload()">← Upload more</button>
+      <button class="btn btn-ghost btn-sm" onclick="goUpload()">â Upload more</button>
       <h1 id="review-title">Questionnaire</h1>
       <div id="review-chips"></div>
     </div>
-    <p class="sub">Ben pre-filled every answer it could find. Review each section — resolve conflicts, fill in gaps. Your confirmed answers generate the requirements.</p>
+    <p class="sub">Ben pre-filled every answer it could find. Review each section â resolve conflicts, fill in gaps. Your confirmed answers generate the requirements.</p>
 
     <div class="stats-bar" id="review-stats"></div>
     <div id="review-body"></div>
 
     <div class="foot">
       <span class="foot-info" id="review-foot-info"></span>
-      <button class="btn btn-primary" id="confirm-all-btn" onclick="confirmAllAndProceed()">Confirm all & generate requirements →</button>
+      <button class="btn btn-primary" id="confirm-all-btn" onclick="confirmAllAndProceed()">Confirm all & generate requirements â</button>
     </div>
   </div>
 </div>
@@ -282,7 +285,7 @@
     shell: null
   };
 
-  // ─── UTILITIES ───────────────────────────────────────────────
+  // âââ UTILITIES âââââââââââââââââââââââââââââââââââââââââââââââ
   function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-' + id).classList.add('active');
@@ -326,7 +329,7 @@
     });
   }
 
-  // ─── HOME ────────────────────────────────────────────────────
+  // âââ HOME ââââââââââââââââââââââââââââââââââââââââââââââââââââ
   async function loadImpls() {
     try {
       var r = await fetch('/api/implementations');
@@ -339,8 +342,8 @@
       list.innerHTML = data.data.map(i => `
         <div class="impl-row" onclick="selectImpl('${i.id}','${i.customer_name.replace(/'/g,"\\'")}')">
           <div class="impl-name">${i.customer_name}</div>
-          <div class="impl-meta">${i.benefit_count} benefit${i.benefit_count == 1 ? '' : 's'} · ${i.document_count} doc${i.document_count == 1 ? '' : 's'}</div>
-          <div style="color:var(--text3);font-size:13px">→</div>
+          <div class="impl-meta">${i.benefit_count} benefit${i.benefit_count == 1 ? '' : 's'} Â· ${i.document_count} doc${i.document_count == 1 ? '' : 's'}</div>
+          <div style="color:var(--text3);font-size:13px">â</div>
         </div>
       `).join('');
     } catch(e) {
@@ -380,7 +383,7 @@
     }
   }
 
-  // ─── UPLOAD ──────────────────────────────────────────────────
+  // âââ UPLOAD ââââââââââââââââââââââââââââââââââââââââââââââââââ
   function handleDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
   function handleDragLeave(e) { document.getElementById('drop-zone').classList.remove('drag-over'); }
   function handleDrop(e) {
@@ -409,12 +412,12 @@
     if (!state.files.length) { list.innerHTML = ''; document.getElementById('upload-foot').style.display = 'none'; return; }
     list.innerHTML = state.files.map(f => `
       <div class="file-row">
-        <div class="file-icon">${f.type === 'application/pdf' || f.name.endsWith('.pdf') ? '📄' : f.name.endsWith('.xlsx') || f.name.endsWith('.csv') ? '📊' : '📝'}</div>
+        <div class="file-icon">${f.type === 'application/pdf' || f.name.endsWith('.pdf') ? 'ð' : f.name.endsWith('.xlsx') || f.name.endsWith('.csv') ? 'ð' : 'ð'}</div>
         <div class="file-meta">
           <div class="file-name">${f.name}</div>
           <div class="file-size">${formatSize(f.size)}</div>
         </div>
-        <div class="file-remove" onclick="removeFile('${f.name.replace(/'/g,"\\'")}')">×</div>
+        <div class="file-remove" onclick="removeFile('${f.name.replace(/'/g,"\\'")}')">Ã</div>
       </div>
     `).join('');
     document.getElementById('upload-foot').style.display = 'flex';
@@ -425,26 +428,26 @@
     showScreen('upload');
   }
 
-  // ─── EXTRACTION ──────────────────────────────────────────────
+  // âââ EXTRACTION ââââââââââââââââââââââââââââââââââââââââââââââ
   async function runExtraction() {
     if (!state.files.length) { toast('Add at least one document'); return; }
     document.getElementById('extract-log').innerHTML = '';
-    document.getElementById('extract-title').textContent = 'Reading documents…';
+    document.getElementById('extract-title').textContent = 'Reading documentsâ¦';
     document.getElementById('extract-sub').textContent = 'Opus is detecting the benefit type and extracting answers';
     document.getElementById('shell-preview').style.display = 'none';
     showScreen('extract');
 
     // Animate log while waiting
-    log('Loading ' + state.files.length + ' document' + (state.files.length === 1 ? '' : 's') + '…');
+    log('Loading ' + state.files.length + ' document' + (state.files.length === 1 ? '' : 's') + 'â¦');
     var logTimer = setInterval(() => {
       var msgs = [
-        'Parsing document structure…',
-        'Scanning for benefit type signals…',
-        'Reading configuration fields…',
-        'Checking for numerical values…',
-        'Looking for conflicts across documents…',
-        'Building questionnaire structure…',
-        'Almost done…'
+        'Parsing document structureâ¦',
+        'Scanning for benefit type signalsâ¦',
+        'Reading configuration fieldsâ¦',
+        'Checking for numerical valuesâ¦',
+        'Looking for conflicts across documentsâ¦',
+        'Building questionnaire structureâ¦',
+        'Almost doneâ¦'
       ];
       if (window._logIdx === undefined) window._logIdx = 0;
       if (window._logIdx < msgs.length) { log(msgs[window._logIdx]); window._logIdx++; }
@@ -476,7 +479,7 @@
       state.questions = data.questions;
 
       // Show detection result in log
-      log('▸ Detected: ' + data.shell.benefit_name, 'log-detect');
+      log('â¸ Detected: ' + data.shell.benefit_name, 'log-detect');
       log('  Benefit type: ' + data.shell.benefit_type, 'log-hi');
       if (data.shell.benefit_id_external) log('  Benefit ID: ' + data.shell.benefit_id_external, 'log-hi');
       log('  ' + data.question_count + ' questions generated from ' + data.doc_count + ' document' + (data.doc_count === 1 ? '' : 's'), 'log-hi');
@@ -484,14 +487,14 @@
       var conflicts = data.questions.filter(q => q.conflict).length;
       var missing = data.questions.filter(q => q.extracted_confidence === 'missing').length;
       if (conflicts) log('  ' + conflicts + ' conflict' + (conflicts === 1 ? '' : 's') + ' detected across documents', 'log-warn');
-      if (missing) log('  ' + missing + ' question' + (missing === 1 ? '' : 's') + ' not found — need manual answers', 'log-warn');
+      if (missing) log('  ' + missing + ' question' + (missing === 1 ? '' : 's') + ' not found â need manual answers', 'log-warn');
 
       document.getElementById('shell-preview').style.display = 'block';
       document.getElementById('shell-preview-name').textContent = data.shell.benefit_name;
       document.getElementById('shell-progress-bar').style.width = '100%';
       document.getElementById('shell-progress-status').textContent = data.question_count + ' questions ready for review';
       document.getElementById('extract-title').textContent = 'Extraction complete';
-      document.getElementById('extract-sub').textContent = 'Questionnaire built — review and confirm answers below';
+      document.getElementById('extract-sub').textContent = 'Questionnaire built â review and confirm answers below';
 
       setTimeout(() => renderReview(), 800);
 
@@ -503,7 +506,7 @@
     }
   }
 
-  // ─── REVIEW ──────────────────────────────────────────────────
+  // âââ REVIEW ââââââââââââââââââââââââââââââââââââââââââââââââââ
   function renderReview() {
     var shell = state.shell;
     var questions = state.questions;
@@ -562,19 +565,19 @@
 
     if (q.conflict && q.conflict_options) {
       var opts = typeof q.conflict_options === 'string' ? JSON.parse(q.conflict_options) : q.conflict_options;
-      answerHtml = '<div class="conflict-box"><strong>Conflict — two values found:</strong>';
+      answerHtml = '<div class="conflict-box"><strong>Conflict â two values found:</strong>';
       opts.forEach((opt, i) => {
         var checked = (i === 0 && !q.confirmed_answer) || (q.confirmed_answer === opt.value) ? 'checked' : '';
-        answerHtml += '<label class="conflict-opt"><input type="radio" name="conf-' + q.id + '" value="' + escapeHtml(opt.value) + '" ' + checked + ' onchange="resolveConflict(\'' + q.id + '\',this.value)"> ' + escapeHtml(opt.value) + ' — ' + (opt.source_document || '') + (opt.source_page ? ' · p.' + opt.source_page : '') + '</label>';
+        answerHtml += '<label class="conflict-opt"><input type="radio" name="conf-' + q.id + '" value="' + escapeHtml(opt.value) + '" ' + checked + ' onchange="resolveConflict(\'' + q.id + '\',this.value)"> ' + escapeHtml(opt.value) + ' â ' + (opt.source_document || '') + (opt.source_page ? ' Â· p.' + opt.source_page : '') + '</label>';
       });
       answerHtml += '</div>';
     } else if (!current && q.extracted_confidence === 'missing') {
       answerHtml = '<div style="color:var(--red);font-size:12px;font-weight:500;margin-bottom:3px">Not found in documents</div>';
-      answerHtml += '<input class="missing-input" id="inp-' + q.id + '" placeholder="Enter answer…" value="' + escapeHtml(q.confirmed_answer || '') + '" oninput="stageMissing(\'' + q.id + '\',this.value)" />';
+      answerHtml += '<input class="missing-input" id="inp-' + q.id + '" placeholder="Enter answerâ¦" value="' + escapeHtml(q.confirmed_answer || '') + '" oninput="stageMissing(\'' + q.id + '\',this.value)" />';
     } else {
-      answerHtml = '<div class="q-answer-val">' + escapeHtml(current || '') + '</div>';
+      answerHtml = '<input type="text" class="q-answer-edit" id="edit-' + q.id + '" value="' + escapeHtml(current || '') + '" placeholder="Enter answer...">';
       if (q.source_document) {
-        answerHtml += '<div class="q-answer-src">📄 ' + escapeHtml(q.source_document) + (q.source_page ? ' · p.' + q.source_page : '') + '</div>';
+        answerHtml += '<div class="q-answer-src">ð ' + escapeHtml(q.source_document) + (q.source_page ? ' Â· p.' + q.source_page : '') + '</div>';
       }
       if (q.source_quote && q.source_quote !== current) {
         answerHtml += '<div class="q-answer-src" style="font-style:italic">"' + escapeHtml(q.source_quote) + '"</div>';
@@ -583,7 +586,7 @@
 
     var confirmCell = '';
     if (q.confirmed_at) {
-      confirmCell = '<span class="confirmed-tick" title="Confirmed">✓</span>';
+      confirmCell = '<span class="confirmed-tick" title="Confirmed">â</span>';
     } else if (!q.conflict && q.extracted_confidence !== 'missing') {
       confirmCell = '<button class="confirm-btn" onclick="confirmQuestion(\'' + q.id + '\')">Confirm</button>';
     }
@@ -607,7 +610,7 @@
   async function confirmQuestion(id) {
     var q = state.questions.find(q => q.id === id);
     if (!q) return;
-    var answer = q.extracted_answer;
+    var editInput = document.getElementById('edit-' + id); var answer = editInput ? editInput.value : q.extracted_answer;
     try {
       var r = await fetch('/api/questions', {
         method: 'POST',
@@ -635,14 +638,14 @@
       q.confirmed_answer = value;
       q.confirmed_at = new Date().toISOString();
       updateReviewFooter();
-      toast('Conflict resolved ✓');
+      toast('Conflict resolved â');
     } catch(e) { toast('Error: ' + e.message); }
   }
 
   async function confirmAllAndProceed() {
     var btn = document.getElementById('confirm-all-btn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span>Saving…';
+    btn.innerHTML = '<span class="spinner"></span>Savingâ¦';
 
     // Save any missing inputs that have been typed
     var promises = [];
@@ -676,7 +679,7 @@
 
     await Promise.all(promises);
     btn.disabled = false;
-    btn.innerHTML = 'Confirm all & generate requirements →';
+    btn.innerHTML = 'Confirm all & generate requirements â';
     toast('All answers confirmed. Requirements generation coming in Phase 2.');
     updateReviewFooter();
   }
@@ -687,12 +690,12 @@
     var unresolved = state.questions.filter(q => q.conflict && !q.confirmed_at).length;
     var missing = state.questions.filter(q => q.extracted_confidence === 'missing' && !q.confirmed_at).length;
     var info = confirmed + '/' + total + ' confirmed';
-    if (unresolved) info += ' · ' + unresolved + ' conflict' + (unresolved===1?'':'s') + ' to resolve';
-    if (missing) info += ' · ' + missing + ' missing';
+    if (unresolved) info += ' Â· ' + unresolved + ' conflict' + (unresolved===1?'':'s') + ' to resolve';
+    if (missing) info += ' Â· ' + missing + ' missing';
     document.getElementById('review-foot-info').textContent = info;
   }
 
-  // ─── INIT ────────────────────────────────────────────────────
+  // âââ INIT ââââââââââââââââââââââââââââââââââââââââââââââââââââ
   loadImpls();
 </script>
 </body>
