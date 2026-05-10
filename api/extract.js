@@ -154,7 +154,8 @@ export default async function handler(req, res) {
     }));
 
     const benefits = results.filter(Boolean);
-    return res.status(200).json({ benefits });
+    const debugErrors = results.map((r, i) => r ? null : benefitNames[i] + ': failed').filter(Boolean);
+    return res.status(200).json({ benefits, _debug: { identified: benefitNames, errors: debugErrors } });
 
   } catch (err) {
     console.error('Extract error:', err);
