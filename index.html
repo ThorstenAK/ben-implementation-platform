@@ -195,8 +195,8 @@
   .sidebar-dot.partial { background: #f59e0b; }
   .sidebar-dot.empty { background: #d1d5db; }
   .sidebar-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .sidebar-remove { opacity: 0; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 5px; border-radius: 4px; }
-  .sidebar-item:hover .sidebar-remove { opacity: 1; }
+  .sidebar-remove { opacity: 0.35; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 5px; border-radius: 4px; transition: opacity 0.1s; }
+  .sidebar-item:hover .sidebar-remove { opacity: 1; color: #6b7280; }
   .sidebar-remove:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
   .review-main { flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; }
   .review-topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
@@ -462,20 +462,34 @@
     document.getElementById('shell-preview').style.display = 'none';
     showScreen('extract');
 
-    // Animate log while waiting
+    // Phase 1: Identify benefits fast
     log('Loading ' + state.files.length + ' document' + (state.files.length === 1 ? '' : 's') + '…');
+    var benefitNames = [];
+    try {
+      log('Identifying benefits in your documents…');
+      var _idRes = await fetch('/api/identify', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ files: state.files.map(f => ({ name: f.name, type: f.type, base64: f.base64 })) })
+      });
+      if (_idRes.ok) {
+        var _idData = await _idRes.json();
+        if (Array.isArray(_idData.benefits) && _idData.benefits.length > 0) {
+          benefitNames = _idData.benefits.map(b => typeof b === 'string' ? b : b.name).filter(Boolean);
+          var preview = benefitNames.slice(0, 4).join(', ') + (benefitNames.length > 4 ? ' …and ' + (benefitNames.length - 4) + ' more' : '');
+          log('Found ' + benefitNames.length + ' benefit' + (benefitNames.length === 1 ? '' : 's') + ': ' + preview);
+        }
+      }
+    } catch (_e) { /* identify failed — extract will run its own pass */ }
+
+    // Phase 2: Extract with named progress
+    var _extIdx = 0;
     var logTimer = setInterval(() => {
-      var msgs = [
-        'Parsing document structure…',
-        'Scanning for benefit type signals…',
-        'Reading configuration fields…',
-        'Checking for numerical values…',
-        'Looking for conflicts across documents…',
-        'Building questionnaire structure…',
-        'Almost done…'
-      ];
-      if (window._logIdx === undefined) window._logIdx = 0;
-      if (window._logIdx < msgs.length) { log(msgs[window._logIdx]); window._logIdx++; }
+      if (benefitNames.length > 0 && _extIdx < benefitNames.length) {
+        log('Extracting ' + benefitNames[_extIdx++] + '…');
+      } else {
+        log('Almost done…');
+      }
     }, 3500);
 
     try {
@@ -484,7 +498,8 @@
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
           implementation_id: state.implId,
-          files: state.files.map(f => ({ name: f.name, type: f.type, base64: f.base64 }))
+          files: state.files.map(f => ({ name: f.name, type: f.type, base64: f.base64 })),
+          benefitNames: benefitNames.length > 0 ? benefitNames : undefined
         })
       });
 
