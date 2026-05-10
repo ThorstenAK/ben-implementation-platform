@@ -45,24 +45,24 @@ export default async function handler(req, res) {
     const contentBlocks = [];
 
     for (const file of files) {
-      const { name, type, data } = file;
-      if (!data) continue;
-      const base64Data = data.includes(',') ? data.split(',')[1] : data;
+      const { name, type, base64 } = file;
+      if (!base64) continue;
+      const b64Data = base64.includes(',') ? base64.split(',')[1] : base64;
 
       if (type === 'application/pdf' || name?.toLowerCase().endsWith('.pdf')) {
         contentBlocks.push({
           type: 'document',
-          source: { type: 'base64', media_type: 'application/pdf', data: base64Data },
+          source: { type: 'base64', media_type: 'application/pdf', data: b64Data },
           title: name || 'document.pdf'
         });
       } else if (type?.startsWith('image/')) {
         contentBlocks.push({
           type: 'image',
-          source: { type: 'base64', media_type: type, data: base64Data }
+          source: { type: 'base64', media_type: type, data: b64Data }
         });
       } else {
         let text;
-        try { text = Buffer.from(base64Data, 'base64').toString('utf-8'); } catch { text = base64Data; }
+        try { text = Buffer.from(b64Data, 'base64').toString('utf-8'); } catch { text = b64Data; }
         contentBlocks.push({ type: 'text', text: `--- Document: ${name || 'file'} ---\n${text}` });
       }
     }
