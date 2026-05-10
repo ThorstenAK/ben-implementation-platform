@@ -488,8 +488,8 @@
 
       // Show detection result in log
       data.benefits.forEach(function(b) { log('▸ Detected: ' + b.shell.benefit_name + ' (' + b.shell.benefit_type + ')', 'log-detect'); });
-      if (data.shell.benefit_id_external) log('  Benefit ID: ' + data.shell.benefit_id_external, 'log-hi');
-      log('  ' + data.question_count + ' questions generated from ' + data.doc_count + ' document' + (data.doc_count === 1 ? '' : 's'), 'log-hi');
+      if (state.benefits[0].shell.benefit_id_external) log('  Benefit ID: ' + state.benefits[0].shell.benefit_id_external, 'log-hi');
+      log('  ' + state.questions.length + ' questions generated from ' + state.files.length + ' document' + (state.files.length === 1 ? '' : 's'), 'log-hi');
 
       var conflicts = data.questions.filter(q => q.conflict).length;
       var missing = data.questions.filter(q => q.extracted_confidence === 'missing').length;
@@ -499,7 +499,7 @@
       document.getElementById('shell-preview').style.display = 'block';
       document.getElementById('shell-preview-name').textContent = data.benefits.length > 1 ? data.benefits.length + ' benefits detected' : data.benefits[0].shell.benefit_name;
       document.getElementById('shell-progress-bar').style.width = '100%';
-      document.getElementById('shell-progress-status').textContent = data.question_count + ' questions ready for review';
+      document.getElementById('shell-progress-status').textContent = state.questions.length + ' questions ready for review';
       document.getElementById('extract-title').textContent = 'Extraction complete';
       document.getElementById('extract-sub').textContent = 'Questionnaire built — review and confirm answers below';
 
