@@ -47,6 +47,7 @@
   /* Screens */
   .screen { display: none; }
   .screen.active { display: block; }
+  #screen-review.active { display: flex; flex-direction: column; }
 
   /* Typography */
   h1 { font-size: 20px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
@@ -182,9 +183,25 @@
   }
     .q-answer-edit { width: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; color: #111; outline: none; transition: border-color 0.15s; }
     .q-answer-edit:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
-  .benefit-tab { padding: 6px 16px; border: 2px solid #e5e7eb; border-radius: 20px; background: white; cursor: pointer; font-size: 14px; font-weight: 500; color: #374151; transition: all 0.15s; }
-    .benefit-tab.active { background: #111827; color: white; border-color: #111827; }
-    .benefit-tab:hover:not(.active) { border-color: #9ca3af; background: #f9fafb; }
+  .review-layout { display: flex; min-height: 0; flex: 1; }
+  .benefit-sidebar { width: 216px; min-width: 216px; background: #f5f4f2; border-right: 1px solid rgba(0,0,0,0.07); overflow-y: auto; padding: 8px 0 32px; display: none; flex-shrink: 0; }
+  .benefit-sidebar.visible { display: block; }
+  .sidebar-group-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #9ca3af; padding: 14px 14px 4px; }
+  .sidebar-item { display: flex; align-items: center; gap: 7px; padding: 8px 14px; cursor: pointer; font-size: 13px; color: #374151; position: relative; border-left: 3px solid transparent; transition: background 0.1s; line-height: 1.3; }
+  .sidebar-item:hover { background: rgba(0,0,0,0.04); }
+  .sidebar-item.active { background: rgba(16,185,129,0.07); border-left-color: #10b981; color: #065f46; font-weight: 600; }
+  .sidebar-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .sidebar-dot.done { background: #10b981; }
+  .sidebar-dot.partial { background: #f59e0b; }
+  .sidebar-dot.empty { background: #d1d5db; }
+  .sidebar-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar-remove { opacity: 0; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 5px; border-radius: 4px; }
+  .sidebar-item:hover .sidebar-remove { opacity: 1; }
+  .sidebar-remove:hover { color: #ef4444; background: rgba(239,68,68,0.08); }
+  .review-main { flex: 1; min-width: 0; overflow-y: auto; padding-right: 4px; }
+  .review-topbar { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+  #screen-review { display: none; flex-direction: column; }
+  #screen-review.active { display: flex; }
     </style>
 </head>
 <body>
@@ -205,7 +222,7 @@
   <!-- Screen: Home / Implementation list -->
   <div id="screen-home" class="screen active">
     <h1>Implementations</h1>
-    <p class="sub">Select an existing implementation or start a new one.</p>
+      <p class="sub">Select an existing implementation or start a new one.</p>
     <div id="impl-list" style="margin-bottom:16px">
       <div style="font-size:13px;color:var(--text2)"><span class="spinner"></span>Loading…</div>
     </div>
@@ -258,20 +275,23 @@
 
   <!-- Screen: Questionnaire review -->
   <div id="screen-review" class="screen">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
+  <div class="review-layout">
+    <div id="benefit-sidebar" class="benefit-sidebar"></div>
+    <div class="review-main">
+      <div class="review-topbar">
       <button class="btn btn-ghost btn-sm" onclick="goUpload()">← Upload more</button>
       <h1 id="review-title">Questionnaire</h1>
-      <div id="review-chips"></div>
-    </div>
-    <div id="benefit-tabs" style="display:none;gap:8px;margin-bottom:8px;flex-wrap:wrap"></div>
+        <div id="review-chips"></div>
+      </div>
     <p class="sub">Ben pre-filled every answer it could find. Review each section — resolve conflicts, fill in gaps. Your confirmed answers generate the requirements.</p>
 
-    <div class="stats-bar" id="review-stats"></div>
-    <div id="review-body"></div>
+      <div class="stats-bar" id="review-stats"></div>
+      <div id="review-body"></div>
 
-    <div class="foot">
+      <div class="foot">
       <span class="foot-info" id="review-foot-info"></span>
       <button class="btn btn-primary" id="confirm-all-btn" onclick="confirmAllAndProceed()">Confirm all & generate requirements →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -521,31 +541,57 @@
     renderReview();
   }
 
+  function renderSidebar() {
+    var sb = document.getElementById('benefit-sidebar');
+    if (!sb) return;
+    if (!state.benefits || state.benefits.length <= 1) {
+      sb.classList.remove('visible');
+      sb.innerHTML = '';
+      return;
+    }
+    sb.classList.add('visible');
+    var groups = {}, groupOrder = [];
+    state.benefits.forEach(function(b, i) {
+      var type = (b.shell && b.shell.benefit_type) || 'Other';
+      if (!groups[type]) { groups[type] = []; groupOrder.push(type); }
+      groups[type].push({ b: b, i: i });
+    });
+    var out = '';
+    groupOrder.forEach(function(type) {
+      out += '<div class="sidebar-group">';
+      out += '<div class="sidebar-group-title">' + type + '</div>';
+      groups[type].forEach(function(item) {
+        var qs = item.b.questions || [];
+        var answered = qs.filter(function(q) { return q.extracted_answer != null && q.extracted_answer !== ''; }).length;
+        var dot = qs.length === 0 ? 'empty' : (answered === qs.length ? 'done' : answered > 0 ? 'partial' : 'empty');
+        var active = item.i === state.activeBenefitIdx ? ' active' : '';
+        var name = (item.b.shell && item.b.shell.benefit_name) || ('Benefit ' + (item.i + 1));
+        out += '<div class="sidebar-item' + active + '" onclick="switchBenefit(' + item.i + ')">';
+        out += '<span class="sidebar-dot ' + dot + '"></span>';
+        out += '<span class="sidebar-name">' + name + '</span>';
+        out += '<button class="sidebar-remove" onclick="removeBenefit(event,' + item.i + ')" title="Remove">×</button>';
+        out += '</div>';
+      });
+      out += '</div>';
+    });
+    sb.innerHTML = out;
+  }
+
+  function removeBenefit(e, idx) {
+    e.stopPropagation();
+    if (state.benefits.length <= 1) { goUpload(); return; }
+    state.benefits.splice(idx, 1);
+    if (state.activeBenefitIdx >= state.benefits.length) state.activeBenefitIdx = state.benefits.length - 1;
+    switchBenefit(state.activeBenefitIdx);
+  }
+
   function renderReview() {
     var shell = state.shell;
     var questions = state.questions;
     if (!shell) { log('Error: shell state missing — state.benefits[0]: ' + JSON.stringify(state.benefits && state.benefits[0] ? Object.keys(state.benefits[0]) : 'none'), 'log-error'); return; }
 
-    // Render benefit tabs
-    var tabsEl = document.getElementById('benefit-tabs');
-    if (tabsEl) {
-      if (state.benefits && state.benefits.length > 1) {
-        tabsEl.innerHTML = state.benefits.map(function(b, i) {
-          return '<button class="benefit-tab' + (i === state.activeBenefitIdx ? ' active' : '') + '" onclick="switchBenefit(' + i + ')">'  + escapeHtml(b.shell.benefit_name) + '</button>';
-        }).join('');
-        tabsEl.style.display = 'flex';
-      } else {
-        tabsEl.style.display = 'none';
-      }
-    }
-
-    // Header chips
-    document.getElementById('review-title').textContent = shell.benefit_name;
-    var chips = '';
-    if (shell.benefit_id_external) chips += '<span class="chip chip-id">' + shell.benefit_id_external + '</span> ';
-    chips += '<span class="chip chip-type">' + shell.benefit_type.replace(/_/g,' ') + '</span> ';
-    chips += '<span class="chip chip-currency">' + shell.currency + '</span>';
-    document.getElementById('review-chips').innerHTML = chips;
+    // Render benefit sidebar
+    renderSidebar()
 
     // Stats
     var high = questions.filter(q => q.extracted_confidence === 'high').length;
