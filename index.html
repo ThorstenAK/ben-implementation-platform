@@ -524,6 +524,7 @@
   function renderReview() {
     var shell = state.shell;
     var questions = state.questions;
+    if (!shell) { log('Error: shell state missing — state.benefits[0]: ' + JSON.stringify(state.benefits && state.benefits[0] ? Object.keys(state.benefits[0]) : 'none'), 'log-error'); return; }
 
     // Render benefit tabs
     var tabsEl = document.getElementById('benefit-tabs');
