@@ -40,8 +40,26 @@ Return ONLY valid JSON in this exact format:
 
 Extract all relevant fields including: coverage levels, limits, premiums, contributions, eligibility criteria, waiting periods, exclusions, renewal date, insurer/provider name, policy number, employee contributions, employer contributions, dependant coverage, tax treatment, salary sacrifice details, and any other plan-specific configuration.`;
 
-function cleanJson(str) {
-  return str.replace(/,\s*([}\]])/g, '$1');
+function repairJson(str) {
+  // Remove trailing commas
+  str = str.replace(/,\s*([}\]])/g, '$1');
+  // Close any unclosed structure from truncation
+  let openBraces = 0, openBrackets = 0, inString = false, esc = false;
+  for (const c of str) {
+    if (esc) { esc = false; continue; }
+    if (c === '\\' && inString) { esc = true; continue; }
+    if (c === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (c === '{') openBraces++;
+    else if (c === '}') openBraces = Math.max(0, openBraces - 1);
+    else if (c === '[') openBrackets++;
+    else if (c === ']') openBrackets = Math.max(0, openBrackets - 1);
+  }
+  if (inString) str += '"';
+  str = str.replace(/,\s*$/, ''); // trailing comma before close
+  for (let i = 0; i < openBrackets; i++) str += ']';
+  for (let i = 0; i < openBraces; i++) str += '}';
+  return str;
 }
 
 function buildContentBlocks(files) {
@@ -119,7 +137,7 @@ export default async function handler(req, res) {
       const raw = identifyMsg.content[0]?.text || '';
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        const parsed = JSON.parse(cleanJson(jsonMatch[0]));
+        const parsed = JSON.parse(repairJson(jsonMatch[0]));
         benefitNames = Array.isArray(parsed.benefits) ? parsed.benefits : [];
       }
     } catch (e) {
@@ -136,7 +154,7 @@ export default async function handler(req, res) {
       try {
         const msg = await anthropic.messages.create({
           model: 'claude-sonnet-4-6',
-          max_tokens: 4096,
+          max_tokens: 8096,
           system: extractPrompt(name),
           messages: [{
             role: 'user',
@@ -146,7 +164,7 @@ export default async function handler(req, res) {
         _msgText = msg.content[0]?.text || '';
         const jsonMatch = _msgText.match(/\{[\s\S]*\}/);
         if (!jsonMatch) return { _failed: name, _reason: 'no JSON found in response', _raw: _msgText.slice(0, 400) };
-        const parsed = JSON.parse(cleanJson(jsonMatch[0]));
+        const parsed = JSON.parse(repairJson(jsonMatch[0]));
         return mapBenefit(parsed);
       } catch (e) {
         console.error(`Error extracting "${name}":`, e.message);
