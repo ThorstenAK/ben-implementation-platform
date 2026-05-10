@@ -47,9 +47,10 @@ function cleanJson(str) {
 function buildContentBlocks(files) {
   const blocks = [];
   for (const file of files) {
-    const { name, type, data } = file;
-    if (!data) continue;
-    const base64Data = data.includes(',') ? data.split(',')[1] : data;
+    const { name, type, data, base64 } = file;
+    const raw = data || base64;
+    if (!raw) continue;
+    const base64Data = raw.includes(',') ? raw.split(',')[1] : raw;
     if (type === 'application/pdf' || name?.toLowerCase().endsWith('.pdf')) {
       blocks.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data }, title: name || 'document.pdf' });
     } else if (type?.startsWith('image/')) {
