@@ -29,7 +29,6 @@ Return ONLY valid JSON (no markdown, no code blocks, no trailing commas):
 Extract every configuration field: insurer, policy number, coverage levels, limits, premiums, contributions, eligibility, waiting periods, exclusions, renewal date, dependants.`;
 
 function cleanJson(str) {
-  // Remove trailing commas before ] or }
   return str.replace(/,\s*([\]}])/g, '$1');
 }
 export default async function handler(req, res) {
@@ -69,30 +68,25 @@ export default async function handler(req, res) {
     if (!jsonMatch) return res.status(500).json({ error: 'No JSON in response', raw: responseText.slice(0, 300) });
 
     let parsed;
-    try {
-      parsed = JSON.parse(jsonMatch[0]);
-    } catch {
-      try {
-        parsed = JSON.parse(cleanJson(jsonMatch[0]));
-      } catch (e2) {
-        return res.status(500).json({ error: 'JSON parse failed: ' + e2.message, raw: jsonMatch[0].slice(0, 500) });
-      }
-    }
+    try { parsed = JSON.parse(jsonMatch[0]); }
+    catch { try { parsed = JSON.parse(cleanJson(jsonMatch[0])); } catch (e2) { return res.status(500).json({ error: 'JSON parse failed: ' + e2.message, raw: jsonMatch[0].slice(0, 500) }); } }
 
-    const result = {
-      shell: { benefit_name: parsed.benefit_name || parsed.benefitType || 'Unknown Benefit', employer: parsed.employer || null },
-      questions: (parsed.questions || parsed.answers || []).map((q, i) => ({
-        id: q.id || `q_${i}`,
-        question: q.question,
-        extracted: q.extracted ?? q.answer ?? null,
-        confidence: q.confidence || 'medium',
-        source: q.source || null
-      })),
+    const benefitName = parsed.benefit_name || parsed.benefitType || 'Unknown Benefit';
+    const questions = (parsed.questions || parsed.answers || []).map((q, i) => ({
+      id: q.id || `q_${i}`,
+      question: q.question,
+      extracted: q.extracted ?? q.answer ?? null,
+      confidence: q.confidence || 'medium',
+      source: q.source || null
+    }));
+
+    return res.status(200).json({
+      shell: { benefit_name: benefitName, benefit_type: benefitName, employer: parsed.employer || null },
+      questions,
+      question_count: questions.length,
       conflicts: parsed.conflicts || [],
       missing: parsed.missing || parsed.missingInfo || []
-    };
-
-    return res.status(200).json(result);
+    });
 
   } catch (err) {
     console.error('Extract error:', err);
