@@ -182,7 +182,10 @@
   }
     .q-answer-edit { width: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; color: #111; outline: none; transition: border-color 0.15s; }
     .q-answer-edit:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
-  </style>
+  .benefit-tab { padding: 6px 16px; border: 2px solid #e5e7eb; border-radius: 20px; background: white; cursor: pointer; font-size: 14px; font-weight: 500; color: #374151; transition: all 0.15s; }
+    .benefit-tab.active { background: #111827; color: white; border-color: #111827; }
+    .benefit-tab:hover:not(.active) { border-color: #9ca3af; background: #f9fafb; }
+    </style>
 </head>
 <body>
 <div class="app">
@@ -260,6 +263,7 @@
       <h1 id="review-title">Questionnaire</h1>
       <div id="review-chips"></div>
     </div>
+    <div id="benefit-tabs" style="display:none;gap:8px;margin-bottom:8px;flex-wrap:wrap"></div>
     <p class="sub">Ben pre-filled every answer it could find. Review each section — resolve conflicts, fill in gaps. Your confirmed answers generate the requirements.</p>
 
     <div class="stats-bar" id="review-stats"></div>
@@ -281,7 +285,9 @@
     shellId: null,
     files: [],   // {name, size, type, base64}
     questions: [],
-    shell: null
+    shell: null,
+    benefits: [],
+    activeBenefitIdx: 0
   };
 
   // ─── UTILITIES ───────────────────────────────────────────────
@@ -473,13 +479,14 @@
       }
 
       var data = await r.json();
-      state.shell = data.shell;
-      state.shellId = data.shell.id;
-      state.questions = data.questions;
+      state.benefits = data.benefits;
+      state.activeBenefitIdx = 0;
+      state.shell = data.benefits[0].shell;
+      state.shellId = null;
+      state.questions = data.benefits[0].questions;
 
       // Show detection result in log
-      log('▸ Detected: ' + data.shell.benefit_name, 'log-detect');
-      log('  Benefit type: ' + data.shell.benefit_type, 'log-hi');
+      data.benefits.forEach(function(b) { log('▸ Detected: ' + b.shell.benefit_name + ' (' + b.shell.benefit_type + ')', 'log-detect'); });
       if (data.shell.benefit_id_external) log('  Benefit ID: ' + data.shell.benefit_id_external, 'log-hi');
       log('  ' + data.question_count + ' questions generated from ' + data.doc_count + ' document' + (data.doc_count === 1 ? '' : 's'), 'log-hi');
 
@@ -489,7 +496,7 @@
       if (missing) log('  ' + missing + ' question' + (missing === 1 ? '' : 's') + ' not found — need manual answers', 'log-warn');
 
       document.getElementById('shell-preview').style.display = 'block';
-      document.getElementById('shell-preview-name').textContent = data.shell.benefit_name;
+      document.getElementById('shell-preview-name').textContent = data.benefits.length > 1 ? data.benefits.length + ' benefits detected' : data.benefits[0].shell.benefit_name;
       document.getElementById('shell-progress-bar').style.width = '100%';
       document.getElementById('shell-progress-status').textContent = data.question_count + ' questions ready for review';
       document.getElementById('extract-title').textContent = 'Extraction complete';
@@ -506,9 +513,29 @@
   }
 
   // ─── REVIEW ──────────────────────────────────────────────────
+  function switchBenefit(idx) {
+    state.activeBenefitIdx = idx;
+    state.shell = state.benefits[idx].shell;
+    state.questions = state.benefits[idx].questions;
+    renderReview();
+  }
+
   function renderReview() {
     var shell = state.shell;
     var questions = state.questions;
+
+    // Render benefit tabs
+    var tabsEl = document.getElementById('benefit-tabs');
+    if (tabsEl) {
+      if (state.benefits && state.benefits.length > 1) {
+        tabsEl.innerHTML = state.benefits.map(function(b, i) {
+          return '<button class="benefit-tab' + (i === state.activeBenefitIdx ? ' active' : '') + '" onclick="switchBenefit(' + i + ')">'  + escapeHtml(b.shell.benefit_name) + '</button>';
+        }).join('');
+        tabsEl.style.display = 'flex';
+      } else {
+        tabsEl.style.display = 'none';
+      }
+    }
 
     // Header chips
     document.getElementById('review-title').textContent = shell.benefit_name;
