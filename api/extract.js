@@ -113,7 +113,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { files } = req.body;
+    const { files, benefitNames: providedNames } = req.body;
     if (!files || !Array.isArray(files) || files.length === 0) {
       return res.status(400).json({ error: 'No files provided' });
     }
@@ -121,27 +121,27 @@ export default async function handler(req, res) {
     const contentBlocks = buildContentBlocks(files);
     if (contentBlocks.length === 0) return res.status(400).json({ error: 'No readable content found in files' });
 
-    // Pass 1: identify all benefit types
-    const identifyMsg = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: IDENTIFY_PROMPT,
-      messages: [{
-        role: 'user',
-        content: [...contentBlocks, { type: 'text', text: 'List all distinct benefit types covered in these documents.' }]
-      }]
-    });
-
+    // Pass 1: identify benefit types (skip if caller already identified them)
     let benefitNames = [];
-    try {
-      const raw = identifyMsg.content[0]?.text || '';
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(repairJson(jsonMatch[0]));
-        benefitNames = Array.isArray(parsed.benefits) ? parsed.benefits : [];
+    if (Array.isArray(providedNames) && providedNames.length > 0) {
+      benefitNames = providedNames;
+    } else {
+      try {
+        const identifyMsg = await anthropic.messages.create({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1024,
+          system: IDENTIFY_PROMPT,
+          messages: [{ role: 'user', content: [...contentBlocks, { type: 'text', text: 'List all distinct benefit types covered in these documents.' }] }]
+        });
+        const raw = identifyMsg.content[0]?.text || '';
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(cleanJson(jsonMatch[0]));
+          benefitNames = Array.isArray(parsed.benefits) ? parsed.benefits : [];
+        }
+      } catch (e) {
+        console.error('Failed to parse benefit list:', e);
       }
-    } catch (e) {
-      console.error('Failed to parse benefit list:', e);
     }
 
     if (benefitNames.length === 0) {
