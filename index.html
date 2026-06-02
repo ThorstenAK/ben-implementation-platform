@@ -181,7 +181,7 @@ label { font-size: 12px; color: var(--text2); margin-bottom: 4px; display: block
 .q-row { grid-template-columns: 130px 1fr 70px; }
 .stage-nav { display: none; }
 }
-.q-answer-edit { width: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; color: #111; outline: none; transition: border-color 0.15s; }
+.q-answer-edit { width: 100%; box-sizing: border-box; padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; font-family: inherit; background: #fff; color: #111; outline: none; transition: border-color 0.15s; resize: none; overflow: hidden; min-height: 32px; line-height: 1.5; display: block; }
 .q-answer-edit:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
 .q-needs-review { background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
 .q-confirmed-val { font-size: 14px; color: #111827; padding: 6px 0; }
@@ -238,6 +238,13 @@ label { font-size: 12px; color: var(--text2); margin-bottom: 4px; display: block
 .flag-todo-item { padding: 7px 0; border-top: 0.5px solid rgba(0,0,0,0.07); }
 .flag-todo-q { font-size: 12px; font-weight: 500; color: var(--text); }
 .flag-todo-note { font-size: 11px; color: var(--text2); margin-top: 2px; font-style: italic; }
+
+.btn-flag-improvement { font-size: 11px; padding: 3px 8px; background: none; border: 0.5px solid var(--border2); border-radius: 6px; cursor: pointer; color: var(--text3); font-family: inherit; margin-top: 4px; margin-left: 6px; }
+.btn-flag-improvement:hover { color: var(--text2); background: var(--bg2); }
+.btn-flag-improvement.flagged { color: var(--amber); border-color: var(--amber-mid); background: var(--amber-light); }
+.flag-improve-box { margin-top: 5px; }
+.flag-improve-box textarea { width: 100%; font-size: 11px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: 6px; background: var(--bg3); font-family: inherit; resize: vertical; min-height: 52px; color: var(--text); box-sizing: border-box; }
+.flag-improve-box textarea:focus { outline: none; border-color: var(--teal); }
 </style>
 </head>
 <body>
@@ -266,7 +273,7 @@ label { font-size: 12px; color: var(--text2); margin-bottom: 4px; display: block
 <h2 style="margin-bottom:12px">New implementation</h2>
 <div class="field">
 <label>Customer name</label>
-<input type="text" id="new-customer-name" placeholder="e.g. Opella Belgium" />
+<input type="text" id="new-customer-name" placeholder="e.g. Test Employer" />
 </div>
 <button class="btn btn-primary" onclick="createImpl()">Create implementation →</button>
 </div>
@@ -710,6 +717,7 @@ html += '</div>';
 var fpEl = document.getElementById('review-flags-panel');
 if (fpEl) fpEl.innerHTML = renderFlagsPanel();
 document.getElementById('review-body').innerHTML = html;
+setTimeout(function() { document.querySelectorAll('textarea.q-answer-edit').forEach(function(el){autoResizeTA(el);}); }, 0);
 updateReviewFooter();
 
 // Change 3: sign-off banner / button
@@ -776,34 +784,29 @@ var checked = (i === 0 && !q.confirmed_answer) || (q.confirmed_answer === opt.va
 answerHtml += '<label class="conflict-opt"><input type="radio" name="conf-' + q.id + '" value="' + escapeHtml(opt.value) + '" ' + checked + ' onchange="resolveConflict(\'' + q.id + '\',this.value)"> ' + escapeHtml(opt.value) + ' — ' + (opt.source_document || '') + (opt.source_page ? ' · p.' + opt.source_page : '') + '</label>';
 });
 answerHtml += '</div>';
-answerHtml += '<div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>';
+answerHtml += '<div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>' + renderFlagBtn(q);
 } else if (!current && q.extracted_confidence === 'missing') {
 answerHtml = '<div style="color:var(--red);font-size:12px;font-weight:500;margin-bottom:3px">Not found in documents</div>';
 answerHtml += '<input class="missing-input" id="inp-' + q.id + '" placeholder="Enter answer…" value="' + escapeHtml(q.confirmed_answer || '') + '" oninput="stageMissing(\'' + q.id + '\',this.value)" />';
-answerHtml += '<div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>';
+answerHtml += '<div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>' + renderFlagBtn(q);
 } else {
-answerHtml = '<input type="text" class="q-answer-edit" id="edit-' + q.id + '" value="' + escapeHtml(current || '') + '" placeholder="Enter answer...">';
+answerHtml = '<textarea class="q-answer-edit" id="edit-' + q.id + '" placeholder="Enter answer..." oninput="autoResizeTA(this)">' + escapeHtml(current || '') + '</textarea>';
 if (q.source_document) {
 answerHtml += '<div class="q-answer-src">📄 ' + escapeHtml(q.source_document) + (q.source_page ? ' · p.' + q.source_page : '') + '</div>';
 }
 if (q.source_quote && q.source_quote !== current) {
 answerHtml += '<div class="q-answer-src" style="font-style:italic">"' + escapeHtml(q.source_quote) + '"</div>';
 }
-answerHtml += '<div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>';
+answerHtml += '<div style="margin-top:5px"><button class="btn-mark-done" onclick="markQuestionDone(\'' + q.id + '\')">✓ Mark as done</button></div>' + renderFlagBtn(q);
 }
 
-var confirmCell = '';
-if (q.confirmed_at && !q.confirmed) {
-confirmCell = '<span class="confirmed-tick" title="Confirmed">✓</span>';
-} else if (!q.conflict && q.extracted_confidence !== 'missing' && !q.confirmed) {
-confirmCell = '<button class="confirm-btn" onclick="confirmQuestion(\'' + q.id + '\')">Confirm</button>';
-}
+
 
 var flagAreaHtml = renderFlagArea(q);
 return `
 <div class="q-row" id="qrow-${q.id}">
 <div class="q-label">${escapeHtml(q.question_text)}${reviewBadge}</div>
-<div class="q-answer">${answerHtml}${confirmCell ? '<div style="margin-top:5px">' + confirmCell + '</div>' : ''}${flagAreaHtml}</div>
+<div class="q-answer">${answerHtml}${flagAreaHtml}</div>
 <div class="q-conf-cell ${cellBg}"><span class="conf conf-${confClass}">${confLabel}</span></div>
 </div>`;
 }
@@ -876,43 +879,26 @@ toast('Conflict resolved ✓');
 async function confirmAllAndProceed() {
 var btn = document.getElementById('confirm-all-btn');
 btn.disabled = true;
-btn.innerHTML = '<span class="spinner"></span>Saving…';
-
-// Save any missing inputs that have been typed
+btn.innerHTML = '<span class="spinner"></span>Generating…';
 var promises = [];
 for (var [id, val] of Object.entries(stagedMissing)) {
 if (!val.trim()) continue;
-promises.push(
-fetch('/api/questions', {
-method: 'POST',
-headers: {'Content-Type':'application/json'},
-body: JSON.stringify({ question_id: id, action: 'confirm', answer: val.trim(), confirmed_by: 'IM' })
-})
-);
+promises.push(fetch('/api/questions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ question_id: id, action: 'confirm', answer: val.trim(), confirmed_by: 'IM' }) }));
 var q = state.questions.find(q => q.id === id);
 if (q) { q.confirmed_answer = val.trim(); q.confirmed_at = new Date().toISOString(); }
 }
-
-// Confirm all high-confidence unconfirmed questions
 for (var q of state.questions) {
 if (!q.confirmed_at && !q.conflict && q.extracted_answer) {
-promises.push(
-fetch('/api/questions', {
-method: 'POST',
-headers: {'Content-Type':'application/json'},
-body: JSON.stringify({ question_id: q.id, action: 'confirm', answer: q.extracted_answer, confirmed_by: 'IM' })
-})
-);
+promises.push(fetch('/api/questions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ question_id: q.id, action: 'confirm', answer: q.extracted_answer, confirmed_by: 'IM' }) }));
 q.confirmed_at = new Date().toISOString();
 q.confirmed_answer = q.extracted_answer;
 }
 }
-
 await Promise.all(promises);
+updateReviewFooter();
+generateBuildPlan();
 btn.disabled = false;
 btn.innerHTML = 'Confirm all & generate requirements →';
-toast('All answers confirmed. Requirements generation coming in Phase 2.');
-updateReviewFooter();
 }
 
 function updateReviewFooter() {
@@ -996,6 +982,89 @@ q.confirmed = true;
 });
 renderReview();
 toast('All questions marked as done');
+}
+
+function autoResizeTA(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+function renderFlagBtn(q) {
+  var flagged = q.flagComment && q.flagComment.trim();
+  return '<div style="margin-top:4px">' +
+    '<button class="btn-flag-improvement' + (flagged ? ' flagged' : '') + '" onclick="toggleFlagImprovement(\'' + q.id + '\')">' +
+    (flagged ? '💬 Flagged' : '💬 Flag improvement') +
+    '</button>' +
+    (q.flagOpen ? '<div class="flag-improve-box"><textarea placeholder="What could the AI do better here? (not saved to server)" oninput="saveFlagComment(\'' + q.id + '\',this.value)">' + escapeHtml(q.flagComment || '') + '</textarea></div>' : '') +
+    '</div>';
+}
+
+function toggleFlagImprovement(qId) {
+  var q = state.questions.find(function(x) { return x.id === qId; });
+  if (q) { q.flagOpen = !q.flagOpen; renderReview(); }
+}
+
+function saveFlagComment(qId, val) {
+  var q = state.questions.find(function(x) { return x.id === qId; });
+  if (q) q.flagComment = val;
+}
+
+function generateBuildPlan() {
+  var implName = state.implName || 'Implementation';
+  var now = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+  function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function makeRow(q) {
+    var ans = (q.confirmed_answer !== undefined && q.confirmed_answer !== null) ? q.confirmed_answer : q.extracted_answer;
+    var empty = ans === null || ans === undefined || ['','null','n/a','not specified','not found','none','unknown'].indexOf(String(ans).trim().toLowerCase()) !== -1;
+    var cc = q.conflict ? 'conf-amber' : q.extracted_confidence === 'high' ? 'conf-green' : q.extracted_confidence === 'medium' ? 'conf-amber' : 'conf-red';
+    var cl = q.conflict ? 'Conflict' : q.extracted_confidence === 'high' ? '✓' : q.extracted_confidence === 'medium' ? 'Review' : 'Missing';
+    return '<tr><td class="fc">' + esc(q.question_text) + '</td><td class="vc">' +
+      (empty ? '<span class="ev">—</span>' : '<span>' + esc(String(ans)) + '</span> <span class="cb ' + cc + '">' + cl + '</span>') + '</td></tr>';
+  }
+  function makeSection(stepLabel, title, qs) {
+    if (!qs || !qs.length) return '';
+    return '<div class="sb"><div class="st"><span class="sl">' + esc(stepLabel) + '</span>' + esc(title) + '</div>' +
+      '<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>' + qs.map(makeRow).join('') + '</tbody></table></div>';
+  }
+  var bHtml = '';
+  state.benefits.forEach(function(benefit, bIdx) {
+    var shell = benefit.shell || {};
+    var questions = benefit.questions || [];
+    var byS = {};
+    questions.forEach(function(q) { var s = q.section || 'configuration'; if (!byS[s]) byS[s] = []; byS[s].push(q); });
+    var order = ['configuration','pricing','eligibility','enrolment','payroll','edge_cases'];
+    var labels = {
+      configuration: ['Steps 1–2', 'Benefit setup & general settings'],
+      pricing: ['Steps 12–13', 'Pricing & sub-prices'],
+      eligibility: ['Step 3', 'Eligibility rules'],
+      enrolment: ['Steps 6–7', 'Enrolment windows & life events'],
+      payroll: ['Step 2 (payroll)', 'Payroll configuration'],
+      edge_cases: ['Notes', 'Edge cases & notes']
+    };
+    var sHtml = '';
+    order.forEach(function(sec) {
+      if (byS[sec] && byS[sec].length) { var l = labels[sec] || [sec, sec]; sHtml += makeSection(l[0], l[1], byS[sec]); }
+    });
+    Object.keys(byS).forEach(function(sec) {
+      if (order.indexOf(sec) === -1) { sHtml += makeSection(sec, sec.replace(/_/g,' '), byS[sec]); }
+    });
+    bHtml += (bIdx > 0 ? '<hr class="bd">' : '') +
+      '<div class="bb"><div class="bh">' +
+      (shell.benefit_type ? '<span class="tt">' + esc(shell.benefit_type) + '</span>' : '') +
+      '<h2>' + esc(shell.benefit_name || 'Benefit ' + (bIdx+1)) + '</h2>' +
+      (shell.benefit_id_external ? '<span class="bid">' + esc(shell.benefit_id_external) + '</span>' : '') +
+      '</div>' + sHtml + '</div>';
+  });
+  var css = 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1a1a19;background:#fff;max-width:820px;margin:0 auto;padding:48px 40px;font-size:13px;line-height:1.5}h1{font-size:28px;font-weight:700;margin-bottom:4px;letter-spacing:-.5px}h2{font-size:15px;font-weight:600;margin:0}.cv{margin-bottom:40px;padding-bottom:24px;border-bottom:2.5px solid #1D9E75}.in{font-size:16px;color:#1D9E75;margin-bottom:2px}.gd{font-size:11px;color:#9a9a96}.bb{margin-bottom:36px}.bd{border:none;border-top:1.5px solid #e0e0da;margin:36px 0}.bh{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;padding-bottom:10px;border-bottom:0.5px solid #e8e8e4}.tt{font-size:10px;background:#E6F1FB;color:#185FA5;border:0.5px solid #85B7EB;border-radius:8px;padding:2px 8px;flex-shrink:0}.bid{font-size:11px;color:#9a9a96;font-family:monospace}.sb{margin-bottom:20px}.st{font-size:13px;font-weight:700;color:#1D9E75;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #1D9E75;display:flex;align-items:center;gap:8px}.sl{font-size:9px;background:#E1F5EE;color:#1D9E75;border:0.5px solid #5DCAA5;border-radius:6px;padding:1px 6px;font-weight:700;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px}table{width:100%;border-collapse:collapse;margin-bottom:6px}th{background:#1a1a19;color:#fff;text-align:left;padding:7px 12px;font-size:11px;font-weight:600}td{padding:7px 12px;border:0.5px solid #d0d0cc;font-size:12px;vertical-align:top}.fc{font-weight:600;width:230px;background:#f9f9f8;color:#3a3a37}.vc{color:#1a1a19}.ev{color:#c0c0bc;font-style:italic}.cb{font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;margin-left:5px;display:inline-block}.conf-green{background:#E1F5EE;color:#1D9E75}.conf-amber{background:#FAEEDA;color:#854F0B}.conf-red{background:#FCEBEB;color:#A32D2D}@media print{.sb{page-break-inside:avoid}.bb{page-break-inside:avoid}}';
+  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Build Plan — ' + esc(implName) + '</title><style>' + css + '</style></head><body>' +
+    '<div class="cv"><h1>Build plan</h1><div class="in">' + esc(implName) + ' — Ben</div><div class="gd">Generated ' + esc(now) + '</div></div>' +
+    bHtml + '</body></html>';
+  var blob = new Blob([html], {type: 'text/html'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = implName.replace(/[^a-z0-9]/gi,'_') + '_build_plan.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  toast('Build plan downloaded ✓');
 }
 
 // ─── INIT ───────────────────────────────────────────────────────────
