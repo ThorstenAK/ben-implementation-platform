@@ -247,7 +247,7 @@ label { font-size: 12px; color: var(--text2); margin-bottom: 4px; display: block
 .flag-improve-box textarea:focus { outline: none; border-color: var(--teal); }
 
 body.screen-review .app { max-width: 1380px; padding-left: 32px; padding-right: 32px; }
-.stat-pill { cursor: pointer; user-select: none; transition: box-shadow 0.1s, opacity 0.1s; }
+.stat-pill { cursor: pointer; user-select: none; transition: box-shadow 0.1s; }
 .stat-pill:hover { opacity: 0.82; }
 .stat-pill.sp-active { box-shadow: 0 0 0 2px currentColor; font-weight: 600; }
 .sp-all { background: var(--bg2); color: var(--text2); border-color: var(--border2); }
@@ -692,7 +692,7 @@ if (!shell) { log('Error: shell state missing — state.benefits[0]: ' + JSON.st
 // Render benefit sidebar
 renderSidebar()
 
-// Stats always from full list; filter controls what renders
+// Stats always from full list; filter what renders
 var allQ = state.questions;
 var high = allQ.filter(function(q){return q.extracted_confidence==='high'&&!q.conflict;}).length;
 var medium = allQ.filter(function(q){return q.extracted_confidence==='medium'&&!q.conflict;}).length;
