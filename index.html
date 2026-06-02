@@ -1012,59 +1012,331 @@ function saveFlagComment(qId, val) {
 function generateBuildPlan() {
   var implName = state.implName || 'Implementation';
   var now = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
-  function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-  function makeRow(q) {
-    var ans = (q.confirmed_answer !== undefined && q.confirmed_answer !== null) ? q.confirmed_answer : q.extracted_answer;
-    var empty = ans === null || ans === undefined || ['','null','n/a','not specified','not found','none','unknown'].indexOf(String(ans).trim().toLowerCase()) !== -1;
-    var cc = q.conflict ? 'conf-amber' : q.extracted_confidence === 'high' ? 'conf-green' : q.extracted_confidence === 'medium' ? 'conf-amber' : 'conf-red';
-    var cl = q.conflict ? 'Conflict' : q.extracted_confidence === 'high' ? '✓' : q.extracted_confidence === 'medium' ? 'Review' : 'Missing';
-    return '<tr><td class="fc">' + esc(q.question_text) + '</td><td class="vc">' +
-      (empty ? '<span class="ev">—</span>' : '<span>' + esc(String(ans)) + '</span> <span class="cb ' + cc + '">' + cl + '</span>') + '</td></tr>';
+
+  function esc(s) { if(!s)return''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // Find answer in question list. terms = array of (string | string[]).
+  // Each element is one attempt: string = partial match, string[] = ALL must match.
+  function qa(qs, terms) {
+    for (var ti=0;ti<terms.length;ti++) {
+      var kws = Array.isArray(terms[ti]) ? terms[ti] : [terms[ti]];
+      for (var qi=0;qi<qs.length;qi++) {
+        var t=(qs[qi].question_text||'').toLowerCase();
+        if (kws.every(function(kw){return t.includes(String(kw).toLowerCase());})) {
+          var ans = qs[qi].confirmed_answer!==undefined && qs[qi].confirmed_answer!==null ? qs[qi].confirmed_answer : qs[qi].extracted_answer;
+          var sv = String(ans||'').trim().toLowerCase();
+          if (ans && ['','null','n/a','not specified','not found','none','unknown'].indexOf(sv)===-1) return String(ans);
+        }
+      }
+    }
+    return null;
   }
-  function makeSection(stepLabel, title, qs) {
-    if (!qs || !qs.length) return '';
-    return '<div class="sb"><div class="st"><span class="sl">' + esc(stepLabel) + '</span>' + esc(title) + '</div>' +
-      '<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>' + qs.map(makeRow).join('') + '</tbody></table></div>';
+
+  function row(field, val) {
+    return '<tr><td style="font-weight:600;background:#f5f4f2;padding:8px 12px;border:0.5px solid #d0d0ca;width:200px;vertical-align:top;font-size:12px;line-height:1.5">'+esc(field)+'</td><td style="padding:8px 12px;border:0.5px solid #d0d0ca;font-size:12px;vertical-align:top;line-height:1.5">'+(val?esc(val):'<span style="color:#bbb;font-style:italic">\u2014</span>')+'</td></tr>';
   }
-  var bHtml = '';
+
+  function tbl(rows, intro) {
+    return (intro?'<p style="font-size:13px;line-height:1.5;margin:8px 0 6px">'+intro+'</p>':'')+
+      '<table style="width:100%;border-collapse:collapse;margin:6px 0 14px"><thead><tr>'+
+      '<th style="text-align:left;padding:7px 12px;background:#1a1a19;color:#fff;font-size:11px;font-weight:600;width:200px">Field</th>'+
+      '<th style="text-align:left;padding:7px 12px;background:#E1F5EE;color:#1D4E45;font-size:11px;font-weight:600">What to enter</th>'+
+      '</tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  function stepH(num, title) {
+    return '<div style="margin-top:32px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #1D9E75;display:flex;align-items:baseline;gap:10px">'+
+      '<span style="color:#1D9E75;font-size:12px;font-weight:700">Step '+num+'</span>'+
+      '<span style="font-size:16px;font-weight:700">'+esc(title)+'</span></div>';
+  }
+
+  function note(text) { return '<div style="background:#E1F5EE;border:0.5px solid #5DCAA5;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.5"><strong style="color:#1D4E45">Note:</strong> '+text+'</div>'; }
+  function act(text) { return '<div style="background:#FEF3E2;border:0.5px solid #EF9F27;border-radius:6px;padding:10px 14px;margin:10px 0;font-size:12px;line-height:1.5"><strong style="color:#854F0B">Action required:</strong> '+text+'</div>'; }
+  function hr() { return '<hr style="border:none;border-top:1px solid #e0e0da;margin:28px 0">'; }
+  function save(t) { return '<p style="font-size:13px;margin:8px 0">'+(t||'Save your changes.')+'</p>'; }
+  function codeBlock(t) { return t?'<div style="background:#f5f4f2;border-radius:6px;padding:10px 14px;font-family:monospace;font-size:11px;margin:6px 0;line-height:1.6;white-space:pre-wrap">'+esc(t)+'</div>':act('Pricing formula not found — obtain from original benefit.'); }
+
+  var benefitsHtml = '';
   state.benefits.forEach(function(benefit, bIdx) {
     var shell = benefit.shell || {};
-    var questions = benefit.questions || [];
-    var byS = {};
-    questions.forEach(function(q) { var s = q.section || 'configuration'; if (!byS[s]) byS[s] = []; byS[s].push(q); });
-    var order = ['configuration','pricing','eligibility','enrolment','payroll','edge_cases'];
-    var labels = {
-      configuration: ['Steps 1–2', 'Benefit setup & general settings'],
-      pricing: ['Steps 12–13', 'Pricing & sub-prices'],
-      eligibility: ['Step 3', 'Eligibility rules'],
-      enrolment: ['Steps 6–7', 'Enrolment windows & life events'],
-      payroll: ['Step 2 (payroll)', 'Payroll configuration'],
-      edge_cases: ['Notes', 'Edge cases & notes']
-    };
-    var sHtml = '';
-    order.forEach(function(sec) {
-      if (byS[sec] && byS[sec].length) { var l = labels[sec] || [sec, sec]; sHtml += makeSection(l[0], l[1], byS[sec]); }
-    });
-    Object.keys(byS).forEach(function(sec) {
-      if (order.indexOf(sec) === -1) { sHtml += makeSection(sec, sec.replace(/_/g,' '), byS[sec]); }
-    });
-    bHtml += (bIdx > 0 ? '<hr class="bd">' : '') +
-      '<div class="bb"><div class="bh">' +
-      (shell.benefit_type ? '<span class="tt">' + esc(shell.benefit_type) + '</span>' : '') +
-      '<h2>' + esc(shell.benefit_name || 'Benefit ' + (bIdx+1)) + '</h2>' +
-      (shell.benefit_id_external ? '<span class="bid">' + esc(shell.benefit_id_external) + '</span>' : '') +
-      '</div>' + sHtml + '</div>';
+    var qs = benefit.questions || [];
+    var name = shell.benefit_name || qa(qs,[['benefit name'],['name of the benefit']]) || 'Benefit';
+    var extId = shell.benefit_id_external || '';
+    function q(terms){return qa(qs,terms);}
+    function secQs(sec){return qs.filter(function(x){return x.section===sec;});}
+
+    var h = '';
+
+    // Cover
+    h += '<div style="margin-bottom:40px">';
+    h += '<h1 style="font-size:32px;font-weight:700;margin:0 0 8px;letter-spacing:-.5px">Step-by-step build guide</h1>';
+    h += '<div style="font-size:19px;color:#1D9E75;margin-bottom:2px">'+esc(name)+' \u2014 Ben</div>';
+    if (extId) h += '<div style="font-size:13px;color:#6b7280;margin-bottom:4px">Benefit ID '+esc(extId)+'</div>';
+    h += '<p style="font-size:13px;line-height:1.6;margin-top:16px;color:#3a3a37">This guide walks you through building '+esc(name)+' in Columbia from scratch. Follow each step in order \u2014 they match the Columbia UI layout from top to bottom.</p>';
+    h += '</div>'+hr();
+
+    // Step 1
+    h += stepH(1,'Create a new modular benefit');
+    h += '<ol style="font-size:13px;line-height:2;margin:6px 0 8px 18px;padding:0"><li>Go to Columbia and click \"Create benefit\".</li><li>Select the employer.</li><li>Fill in the basic benefit details:</li></ol>';
+    h += tbl([
+      row('Name', q(['benefit name',['name','benefit'],'what is the name'])),
+      row('Short description (en)', q(['short description','description (en)',['description','employee-facing']])),
+      row('Programme', q(['programme',['benefits','programme'],'program name'])),
+      row('Currency', q(['currency'])),
+      row('Start date', q(['start date',['benefit','start date']])),
+      row('Renewal date', q(['renewal date','renewal'])),
+      row('Benefit type', q(['benefit type','type of benefit'])),
+      row('Product type', q(['product type','insurance type','pmi',['type','product']])),
+    ].join(''));
+    h += save('Save the benefit.');
+    h += hr();
+
+    // Step 2
+    h += stepH(2,'Configure general settings');
+    h += '<p style="font-size:13px;margin:8px 0">On the benefit detail page, set the following fields:</p>';
+    h += tbl([
+      row('Enrolment type', q(['enrolment type','enrollment type','opt_out','opt_in',['enrolment','type']])),
+      row('Eligibility-based enrolment', q(['eligibility-based enrolment','eligibility based enrolment',['eligibility','enrolment']])),
+      row('Auto-activating', q(['auto-activat',['auto','activat']])),
+      row('Requires activation approval', q([['activation approval'],['approval','activation']])),
+      row('Requires deactivation approval', q([['deactivation approval'],['approval','deactivation']])),
+      row('Activation timing', q(['activation timing',['when','activat'],['timing','activation'],'cover starts'])),
+      row('Deactivation timing', q(['deactivation timing',['when','deactivat'],['timing','deactivation']])),
+      row('Close windows on fulfilment', q(['close windows on fulfilment',['fulfilment','close']])),
+      row('Show price', q(['show price','display price',['price','visible']])),
+      row('Show payment sources', q(['show payment sources','payment sources'])),
+      row('Show enrolment details', q(['show enrolment details','enrolment details'])),
+      row('Show change history', q(['show change history','change history'])),
+      row('Show payment history', q(['show payment history','payment history'])),
+      row('Include dependants', q(['include dependants','dependant cover',['dependants','included']])),
+      row('Collect dependant addresses', q(['collect dependant address','dependant address'])),
+      row('Included in NMW calculations', q(['nmw','national minimum wage','nmw calculation'])),
+      row('Recalculate price on salary change', q([['recalculate','salary'],['price','salary change']])),
+      row('Pay deduction type', q(['pay deduction type',['pay','deduction','type'],'gross or net'])),
+      row('Deduction type', q(['deduction type','type of deduction'])),
+      row('Prorate for payroll', q(['prorate','pro-rate',['payroll','prorate']])),
+      row('Deduction logic', q(['deduction logic'])),
+      row('Remainder attribution', q(['remainder attribution','remainder'])),
+      row('Post-cutoff behaviour', q(['post-cutoff','post cutoff','after cutoff'])),
+      row('Payroll reference date', q(['payroll reference date',['payroll','reference date']])),
+      row('Opt-in window closes after opt-out', q(['opt-in window closes after opt-out'])),
+      row('Config window closes after opt-in', q(['config window closes after opt-in'])),
+      row('Contact-only changes reset enrolment', q(['contact-only changes',['reset','enrolment']])),
+    ].join(''));
+    h += save();
+    h += hr();
+
+    // Step 3
+    h += stepH(3,'Eligibility rules');
+    var eligQs = secQs('eligibility');
+    var eRows = eligQs.map(function(x){return row(x.question_text, x.confirmed_answer||x.extracted_answer);}).join('');
+    h += eRows ? tbl(eRows) : note('No eligibility rules are configured for this benefit. All employees within the programme are eligible.');
+    h += hr();
+
+    // Step 4
+    h += stepH(4,'Add benefit features');
+    h += '<p style="font-size:13px;margin:8px 0">In the features section, add the following features:</p>';
+    var featAns = q([['feature'],['feature list'],['benefit features']]);
+    var featRows = '';
+    if (featAns) {
+      featAns.split(/\n|;|,(?=[A-Z])/).forEach(function(it,i){ if(it.trim()) featRows+=row(String(i+1),it.trim()); });
+    }
+    var featQs = qs.filter(function(x){return (x.question_text||'').toLowerCase().includes('feature');});
+    if (!featRows && featQs.length) featRows = featQs.map(function(x){return row(x.question_text,x.confirmed_answer||x.extracted_answer);}).join('');
+    h += featRows ? tbl(featRows,'') : act('Feature list not found in documents. Check the original benefit or ask the provider.');
+    h += save('Save the features.');
+    h += hr();
+
+    // Step 5
+    h += stepH(5,'Attach benefit documents');
+    h += '<p style="font-size:13px;margin:8px 0">Upload the following documents:</p>';
+    var docAns = q([['document list'],['attached document'],['policy document'],['documents to attach']]);
+    var docRows = '';
+    if (docAns) {
+      docAns.split(/\n|;|,(?=[A-Z])/).forEach(function(d){ if(d.trim()) docRows+=row(d.trim(),'No'); });
+    }
+    var docQs = qs.filter(function(x){return (x.question_text||'').toLowerCase().includes('document');});
+    if (!docRows && docQs.length) docRows = docQs.map(function(x){return row(x.question_text,x.confirmed_answer||x.extracted_answer);}).join('');
+    h += docRows ? tbl(docRows) : act('Document list not found. Obtain the actual files from the original benefit or provider.');
+    h += act('You will need the actual document files from the original benefit or from the insurance provider.');
+    h += save('Save the documents.');
+    h += hr();
+
+    // Step 6
+    h += stepH(6,'Add enrolment windows');
+    h += '<p style="font-size:13px;margin:8px 0">Add two enrolment windows, both triggered from when the employee becomes eligible:</p>';
+    var winDur = q([['window duration'],['window length'],['window','days'],['30 day'],['enrolment window']]);
+    h += '<p style="font-size:12px;font-weight:600;margin:12px 0 4px;color:#3a3a37">Window 1: Configuration window</p>';
+    h += tbl([
+      row('Window type','CONFIG_WINDOW'),
+      row('Starts on', q([['config window','start'],['configuration window','start']])||'Eligibility start'),
+      row('Duration', q([['config window','duration'],['configuration window','duration'],['config window','days']])||winDur||''),
+      row('End', q([['config window','end'],['configuration window','end']])||''),
+    ].join(''));
+    h += '<p style="font-size:12px;font-weight:600;margin:12px 0 4px;color:#3a3a37">Window 2: Opt-out window</p>';
+    h += tbl([
+      row('Window type','OPT_OUT_WINDOW'),
+      row('Starts on', q([['opt-out window','start'],['opt out window','start']])||'Eligibility start'),
+      row('Duration', q([['opt-out window','duration'],['opt out window','duration'],['opt-out window','days']])||winDur||''),
+      row('End', q([['opt-out window','end'],['opt out window','end']])||''),
+    ].join(''));
+    h += note('Both windows are triggered from when the employee becomes eligible.');
+    h += save('Save the windows.');
+    h += hr();
+
+    // Step 7
+    h += stepH(7,'Configure life events');
+    h += '<p style="font-size:13px;margin:8px 0">Add the following life events:</p>';
+    var leAns = q([['life event',],['qualifying event'],['life events configured']]);
+    var leRows = '';
+    if (leAns) { leAns.split(/\n|;|,/).forEach(function(e){ if(e.trim()) leRows+=row(e.trim(),''); }); }
+    var leQs = qs.filter(function(x){return (x.question_text||'').toLowerCase().includes('life event');});
+    if (!leRows && leQs.length) leRows = leQs.map(function(x){return row(x.question_text,x.confirmed_answer||x.extracted_answer);}).join('');
+    h += leRows ? tbl(leRows) : act('Life events list not found in documents.');
+    h += save('Save the life events.');
+    h += hr();
+
+    // Step 8
+    h += stepH(8,'Upload rate tables');
+    h += '<p style="font-size:13px;margin:8px 0">This benefit uses rate tables. Upload each one:</p>';
+    var rateQs = secQs('pricing').filter(function(x){return (x.question_text||'').toLowerCase().includes('rate');});
+    h += rateQs.length ? tbl(rateQs.map(function(x){return row(x.question_text,x.confirmed_answer||x.extracted_answer);}).join('')) : '';
+    h += act('The actual rate data is provider-specific pricing. Obtain the current rates and upload as CSVs.');
+    h += save('Save the rate tables.');
+    h += hr();
+
+    // Step 9
+    h += stepH(9,'Create the benefit step');
+    h += '<p style="font-size:13px;margin:8px 0">Click \"Add step\" and configure:</p>';
+    h += tbl([
+      row('Step name', q(['step name',['name','step']])||'Add your dependants'),
+      row('Description', q(['step description'])||'(leave blank)'),
+      row('Rank','0'),
+    ].join(''));
+    h += save('Save the step.');
+    h += hr();
+
+    // Step 10
+    h += stepH(10,'Add component: Text block (important information)');
+    h += '<p style="font-size:13px;margin:8px 0">Inside the step, click \"Add component\" and choose \"Text block\".</p>';
+    h += tbl([
+      row('Component type','Text block'),
+      row('Name','Important information'),
+      row('Rank','0'),
+      row('Show name','Yes'),
+    ].join(''));
+    h += act('The exact text block content (HTML) needs to be obtained from the original benefit configuration or drafted by the client.');
+    h += save('Save the component.');
+    h += hr();
+
+    // Step 11
+    h += stepH(11,'Add component: Contacts field (dependants)');
+    h += '<p style="font-size:13px;margin:8px 0">Click \"Add component\" and choose \"Contacts field\".</p>';
+    h += tbl([
+      row('Component type','Contacts field'),
+      row('Name','Add your dependants'),
+      row('Key','dependants'),
+      row('Rank','1'),
+      row('Show name','Yes (ticked)'),
+      row('Required','No (unticked) \u2014 optional for the employee'),
+      row('Max (total dependants)', q([['max','dependants'],['maximum dependants'],['dependant limit']])||'(leave blank \u2014 no limit)'),
+      row('Max spouse', q([['max spouse'],['maximum spouse']])||'(leave blank \u2014 no limit)'),
+      row('Max child', q([['max child'],['maximum child']])||'(leave blank \u2014 no limit)'),
+      row('Accepted contact types', q([['accepted contact'],['contact types'],['dependant types'],['spouse','child','accepted']])||''),
+      row('Min age spouse', q([['min age','spouse'],['minimum age','spouse'],['spouse','min age']])||''),
+      row('Max age spouse', q([['max age','spouse'],['maximum age','spouse']])||'(leave blank \u2014 no upper limit)'),
+      row('Min age child', q([['min age','child'],['minimum age','child'],['child','min age']])||''),
+      row('Max age child', q([['max age','child'],['maximum age','child']])||'(leave blank \u2014 no upper limit)'),
+    ].join(''));
+    h += save('Save the component.');
+    h += hr();
+
+    // Step 12
+    h += stepH(12,'Add sub-price: Your price (employee cover)');
+    h += '<p style="font-size:13px;margin:8px 0">Click \"Add sub-price\".</p>';
+    var f1 = q([['employee price formula'],['your price formula'],['employee cover formula'],['pricing formula','employee'],['employee','pricing formula']]);
+    h += tbl([
+      row('Sub-price name','Your price'),
+      row('Rank','0'),
+      row('Employee contribution (%)', q([['employee contribution'],['employee pays'],['employer pays','0']])||''),
+      row('Is dependant price','No (unticked)'),
+    ].join(''));
+    h += '<p style="font-size:12px;font-weight:600;margin:10px 0 4px;color:#3a3a37">Pricing formula:</p>';
+    h += codeBlock(f1);
+    h += save('Save the sub-price.');
+    h += hr();
+
+    // Step 13
+    h += stepH(13,'Add sub-price: Dependant price');
+    h += '<p style="font-size:13px;margin:8px 0">Click \"Add sub-price\" again.</p>';
+    var f2 = q([['dependant price formula'],['dependant cover formula'],['pricing formula','dependant'],['dependant pricing'],['dependant','formula']]);
+    h += tbl([
+      row('Sub-price name','Dependant price'),
+      row('Rank','1'),
+      row('Employee contribution (%)', q([['dependant contribution'],['employee pays','dependant'],['dependant','employee pays']])||''),
+      row('Is dependant price','No (unticked)'),
+    ].join(''));
+    h += '<p style="font-size:12px;font-weight:600;margin:10px 0 4px;color:#3a3a37">Pricing formula:</p>';
+    h += codeBlock(f2);
+    h += save('Save the sub-price.');
+    h += hr();
+
+    // Step 14
+    h += stepH(14,'Publish the benefit');
+    h += '<ol style="font-size:13px;line-height:2;margin:8px 0 8px 18px;padding:0"><li>Review all sections on the Columbia benefit page.</li><li>Set the status to \"Published\".</li><li>Save.</li></ol>';
+    h += note('Once published, all eligible employees will be enrolled according to the enrolment type configured in Step 2.');
+    h += hr();
+
+    // Step 15
+    h += stepH(15,'Post-build verification checklist');
+    h += '<p style="font-size:13px;margin:8px 0">Walk through the following checks, then keep the key numbers below for reference.</p>';
+    var checks = [
+      'Verify the benefit tile appears in the catalogue with the correct name and description.',
+      'Verify all benefit features display on the card.',
+      'Verify the attached documents are visible and downloadable.',
+      'Click into the benefit. Confirm the \"Add your dependants\" step appears.',
+      'Confirm the contacts field is present and configured correctly.',
+      'Check the employee-only price (Your price) displays the correct rate.',
+      'Add a test dependant. Confirm the Dependant price updates correctly.',
+      'Remove all dependants. Confirm the Dependant price returns to 0.',
+      'Confirm the benefit auto-enrols eligible employees (check enrolment type).',
+      'Confirm activation timing takes effect as configured.',
+      'Confirm deactivation timing takes effect as configured.',
+      'Confirm enrolment windows close after the configured duration.',
+      'Trigger a life event and confirm the employee can update dependants.',
+    ];
+    h += '<ol style="font-size:12px;line-height:1.9;margin:8px 0 16px 18px;padding:0">'+checks.map(function(c){return '<li>'+c+'</li>';}).join('')+'</ol>';
+    h += '<p style="font-size:13px;font-weight:600;margin:16px 0 8px">Key numbers reference</p>';
+    var keyPairs = [
+      ['Benefit name', q(['benefit name',['name','benefit']])],
+      ['Benefit ID (external)', extId||q(['external id','benefit id'])],
+      ['Start date', q(['start date'])],
+      ['Renewal date', q(['renewal date','renewal'])],
+      ['Enrolment type', q(['enrolment type','enrollment type'])],
+      ['Activation timing', q(['activation timing'])],
+      ['Deactivation timing', q(['deactivation timing'])],
+      ['Eligibility', q(['eligibility','rule'])||'No rules — all employees in programme'],
+      ['Config window', q([['config window'],['configuration window']])],
+      ['Opt-out window', q([['opt-out window'],['opt out window']])],
+      ['Dependant types', q([['dependant type'],['accepted contact']])],
+      ['Max dependants', q([['max dependants'],['maximum dependants']])||'No limit'],
+      ['Employee pays', q([['employee pays'],['employee contribution']])],
+      ['Employer pays', q([['employer pays'],['employer contribution']])],
+    ];
+    var kRows = keyPairs.filter(function(p){return p[1];}).map(function(p){return row(p[0],p[1]);}).join('');
+    h += kRows ? tbl(kRows) : '';
+
+    benefitsHtml += (bIdx>0?'<div style="page-break-before:always;height:1px"></div>':'')+h;
   });
-  var css = 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1a1a19;background:#fff;max-width:820px;margin:0 auto;padding:48px 40px;font-size:13px;line-height:1.5}h1{font-size:28px;font-weight:700;margin-bottom:4px;letter-spacing:-.5px}h2{font-size:15px;font-weight:600;margin:0}.cv{margin-bottom:40px;padding-bottom:24px;border-bottom:2.5px solid #1D9E75}.in{font-size:16px;color:#1D9E75;margin-bottom:2px}.gd{font-size:11px;color:#9a9a96}.bb{margin-bottom:36px}.bd{border:none;border-top:1.5px solid #e0e0da;margin:36px 0}.bh{display:flex;align-items:baseline;gap:10px;margin-bottom:16px;padding-bottom:10px;border-bottom:0.5px solid #e8e8e4}.tt{font-size:10px;background:#E6F1FB;color:#185FA5;border:0.5px solid #85B7EB;border-radius:8px;padding:2px 8px;flex-shrink:0}.bid{font-size:11px;color:#9a9a96;font-family:monospace}.sb{margin-bottom:20px}.st{font-size:13px;font-weight:700;color:#1D9E75;margin-bottom:8px;padding-bottom:4px;border-bottom:1.5px solid #1D9E75;display:flex;align-items:center;gap:8px}.sl{font-size:9px;background:#E1F5EE;color:#1D9E75;border:0.5px solid #5DCAA5;border-radius:6px;padding:1px 6px;font-weight:700;flex-shrink:0;text-transform:uppercase;letter-spacing:.5px}table{width:100%;border-collapse:collapse;margin-bottom:6px}th{background:#1a1a19;color:#fff;text-align:left;padding:7px 12px;font-size:11px;font-weight:600}td{padding:7px 12px;border:0.5px solid #d0d0cc;font-size:12px;vertical-align:top}.fc{font-weight:600;width:230px;background:#f9f9f8;color:#3a3a37}.vc{color:#1a1a19}.ev{color:#c0c0bc;font-style:italic}.cb{font-size:9px;font-weight:700;padding:1px 5px;border-radius:6px;margin-left:5px;display:inline-block}.conf-green{background:#E1F5EE;color:#1D9E75}.conf-amber{background:#FAEEDA;color:#854F0B}.conf-red{background:#FCEBEB;color:#A32D2D}@media print{.sb{page-break-inside:avoid}.bb{page-break-inside:avoid}}';
-  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Build Plan — ' + esc(implName) + '</title><style>' + css + '</style></head><body>' +
-    '<div class="cv"><h1>Build plan</h1><div class="in">' + esc(implName) + ' — Ben</div><div class="gd">Generated ' + esc(now) + '</div></div>' +
-    bHtml + '</body></html>';
-  var blob = new Blob([html], {type: 'text/html'});
+
+  var css = 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1a1a19;background:#fff;max-width:800px;margin:0 auto;padding:48px 40px;font-size:13px;line-height:1.5}h1,h2,p{margin:0}ol,ul{line-height:1.8}@media print{hr{break-before:avoid}}';
+  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Build Guide \u2014 '+esc(implName)+'</title><style>'+css+'</style></head><body>'+benefitsHtml+'</body></html>';
+  var blob = new Blob([html],{type:'text/html'});
   var url = URL.createObjectURL(blob);
-  var a = document.createElement('a'); a.href = url; a.download = implName.replace(/[^a-z0-9]/gi,'_') + '_build_plan.html';
+  var a=document.createElement('a'); a.href=url; a.download=implName.replace(/[^a-z0-9]/gi,'_')+'_build_guide.html';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  toast('Build plan downloaded ✓');
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  toast('Build guide downloaded \u2713');
 }
 
 // ─── INIT ───────────────────────────────────────────────────────────
