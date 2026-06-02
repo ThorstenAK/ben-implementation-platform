@@ -245,6 +245,13 @@ label { font-size: 12px; color: var(--text2); margin-bottom: 4px; display: block
 .flag-improve-box { margin-top: 5px; }
 .flag-improve-box textarea { width: 100%; font-size: 11px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: 6px; background: var(--bg3); font-family: inherit; resize: vertical; min-height: 52px; color: var(--text); box-sizing: border-box; }
 .flag-improve-box textarea:focus { outline: none; border-color: var(--teal); }
+
+body.screen-review .app { max-width: 1380px; padding-left: 32px; padding-right: 32px; }
+.stat-pill { cursor: pointer; user-select: none; transition: box-shadow 0.1s, opacity 0.1s; }
+.stat-pill:hover { opacity: 0.82; }
+.stat-pill.sp-active { box-shadow: 0 0 0 2px currentColor; font-weight: 600; }
+.sp-all { background: var(--bg2); color: var(--text2); border-color: var(--border2); }
+.sp-all.sp-active { box-shadow: 0 0 0 2px var(--text); color: var(--text); }
 </style>
 </head>
 <body>
@@ -354,13 +361,15 @@ files: [], // {name, size, type, base64}
 questions: [],
 shell: null,
 benefits: [],
-activeBenefitIdx: 0
+activeBenefitIdx: 0,
+activeFilter: null
 };
 
 // ─── UTILITIES ────────────────────────────────────
 function showScreen(id) {
 document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
 document.getElementById('screen-' + id).classList.add('active');
+document.body.className = 'screen-' + id;
 ['home','upload','extract','review'].forEach((name, i) => {
 var el = document.getElementById('sn-' + name);
 if (!el) return;
@@ -683,16 +692,29 @@ if (!shell) { log('Error: shell state missing — state.benefits[0]: ' + JSON.st
 // Render benefit sidebar
 renderSidebar()
 
-// Stats
-var high = questions.filter(q => q.extracted_confidence === 'high').length;
-var medium = questions.filter(q => q.extracted_confidence === 'medium').length;
-var missing = questions.filter(q => q.extracted_confidence === 'missing').length;
-var conflicts = questions.filter(q => q.conflict).length;
+// Stats always from full list; filter controls what renders
+var allQ = state.questions;
+var high = allQ.filter(function(q){return q.extracted_confidence==='high'&&!q.conflict;}).length;
+var medium = allQ.filter(function(q){return q.extracted_confidence==='medium'&&!q.conflict;}).length;
+var missing = allQ.filter(function(q){return q.extracted_confidence==='missing'&&!q.conflict;}).length;
+var conflicts = allQ.filter(function(q){return !!q.conflict;}).length;
+var total = allQ.length;
+var f = state.activeFilter;
+if (f) {
+questions = allQ.filter(function(q) {
+if (f==='conflict') return !!q.conflict;
+if (f==='missing') return q.extracted_confidence==='missing'&&!q.conflict;
+if (f==='high') return q.extracted_confidence==='high'&&!q.conflict;
+if (f==='medium') return q.extracted_confidence==='medium'&&!q.conflict;
+return true;
+});
+}
 var statsHtml = '';
-if (high) statsHtml += '<span class="stat-pill sp-hi">' + high + ' high confidence</span>';
-if (medium) statsHtml += '<span class="stat-pill sp-med">' + medium + ' review</span>';
-if (conflicts) statsHtml += '<span class="stat-pill sp-conf">' + conflicts + ' conflict' + (conflicts===1?'':'s') + '</span>';
-if (missing) statsHtml += '<span class="stat-pill sp-miss">' + missing + ' missing</span>';
+statsHtml += '<span class="stat-pill sp-all'+(!f?' sp-active':'')+'" onclick="setFilter(null)">All ('+total+')</span>';
+if (high) statsHtml += '<span class="stat-pill sp-hi'+(f==='high'?' sp-active':'')+'" onclick="setFilter('high')">'+high+' high confidence</span>';
+if (medium) statsHtml += '<span class="stat-pill sp-med'+(f==='medium'?' sp-active':'')+'" onclick="setFilter('medium')">'+medium+' review</span>';
+if (conflicts) statsHtml += '<span class="stat-pill sp-conf'+(f==='conflict'?' sp-active':'')+'" onclick="setFilter('conflict')">'+conflicts+' conflict'+(conflicts===1?'':'s')+'</span>';
+if (missing) statsHtml += '<span class="stat-pill sp-miss'+(f==='missing'?' sp-active':'')+'" onclick="setFilter('missing')">'+missing+' missing</span>';
 document.getElementById('review-stats').innerHTML = statsHtml;
 
 // Group by section
@@ -1337,6 +1359,11 @@ function generateBuildPlan() {
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   setTimeout(function(){URL.revokeObjectURL(url);},1000);
   toast('Build guide downloaded \u2713');
+}
+
+function setFilter(type) {
+  state.activeFilter = type;
+  renderReview();
 }
 
 // ─── INIT ───────────────────────────────────────────────────────────
