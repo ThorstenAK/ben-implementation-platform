@@ -692,7 +692,7 @@ if (!shell) { log('Error: shell state missing — state.benefits[0]: ' + JSON.st
 // Render benefit sidebar
 renderSidebar()
 
-// Stats always from full list; filter what renders
+// Stats always from full list; filter controls what renders
 var allQ = state.questions;
 var high = allQ.filter(function(q){return q.extracted_confidence==='high'&&!q.conflict;}).length;
 var medium = allQ.filter(function(q){return q.extracted_confidence==='medium'&&!q.conflict;}).length;
@@ -710,11 +710,11 @@ return true;
 });
 }
 var statsHtml = '';
-statsHtml += '<span class="stat-pill sp-all'+(!f?' sp-active':'')+'" onclick="setFilter(null)">All ('+total+')</span>';
-if (high) statsHtml += '<span class="stat-pill sp-hi'+(f==='high'?' sp-active':'')+'" onclick="setFilter('high')">'+high+' high confidence</span>';
-if (medium) statsHtml += '<span class="stat-pill sp-med'+(f==='medium'?' sp-active':'')+'" onclick="setFilter('medium')">'+medium+' review</span>';
-if (conflicts) statsHtml += '<span class="stat-pill sp-conf'+(f==='conflict'?' sp-active':'')+'" onclick="setFilter('conflict')">'+conflicts+' conflict'+(conflicts===1?'':'s')+'</span>';
-if (missing) statsHtml += '<span class="stat-pill sp-miss'+(f==='missing'?' sp-active':'')+'" onclick="setFilter('missing')">'+missing+' missing</span>';
+statsHtml += '<span class="stat-pill sp-all' + (!f ? ' sp-active' : '') + '" onclick="setFilter(null)">All (' + total + ')</span>';
+if (high) statsHtml += '<span class="stat-pill sp-hi' + (f==='high' ? ' sp-active' : '') + '" data-fv="high" onclick="setFilter(this.dataset.fv)">' + high + ' high confidence</span>';
+if (medium) statsHtml += '<span class="stat-pill sp-med' + (f==='medium' ? ' sp-active' : '') + '" data-fv="medium" onclick="setFilter(this.dataset.fv)">' + medium + ' review</span>';
+if (conflicts) statsHtml += '<span class="stat-pill sp-conf' + (f==='conflict' ? ' sp-active' : '') + '" data-fv="conflict" onclick="setFilter(this.dataset.fv)">' + conflicts + ' conflict' + (conflicts===1 ? '' : 's') + '</span>';
+if (missing) statsHtml += '<span class="stat-pill sp-miss' + (f==='missing' ? ' sp-active' : '') + '" data-fv="missing" onclick="setFilter(this.dataset.fv)">' + missing + ' missing</span>';
 document.getElementById('review-stats').innerHTML = statsHtml;
 
 // Group by section
